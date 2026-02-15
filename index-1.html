@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nigeria SurveyorPro - Professional Land Surveying</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        * { font-family: 'Inter', sans-serif; }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .5; }
+        }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="gradient-bg text-white p-6 shadow-lg">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-3xl font-bold">📍 Nigeria SurveyorPro</h1>
+                <p class="text-sm opacity-90 mt-1">Professional Land Surveying Tool</p>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-4xl mx-auto p-6">
+            <!-- GPS Status -->
+            <div id="gpsStatus" class="bg-white rounded-xl p-6 shadow-lg mb-6">
+                <h2 class="text-2xl font-bold mb-4">GPS Status</h2>
+                <div id="gpsInfo">
+                    <p class="text-gray-600">Click "Enable GPS" to start surveying</p>
+                </div>
+                <button onclick="enableGPS()" class="mt-4 gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
+                    Enable GPS
+                </button>
+            </div>
+
+            <!-- Survey Controls -->
+            <div id="surveyControls" class="bg-white rounded-xl p-6 shadow-lg mb-6 hidden">
+                <h2 class="text-2xl font-bold mb-4">Survey Controls</h2>
+                <div class="space-y-4">
+                    <button onclick="addPoint()" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                        ➕ Add Point
+                    </button>
+                    <button onclick="completeSurvey()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
+                        ✅ Complete Survey
+                    </button>
+                </div>
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <p class="font-semibold">Points Captured: <span id="pointCount">0</span></p>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="bg-white rounded-xl p-6 shadow-lg hidden">
+                <h2 class="text-2xl font-bold mb-4">Survey Results</h2>
+                <div id="resultsContent" class="space-y-3">
+                </div>
+                <button onclick="newSurvey()" class="mt-4 gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
+                    New Survey
+                </button>
+            </div>
+
+            <!-- Points List -->
+            <div id="pointsList" class="bg-white rounded-xl p-6 shadow-lg mt-6 hidden">
+                <h2 class="text-xl font-bold mb-4">Captured Points</h2>
+                <div id="pointsContent" class="space-y-2">
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center p-6 text-gray-600 text-sm">
+            <p>© 2026 Nigeria SurveyorPro | Professional Land Surveying</p>
+        </footer>
+    </div>
+
+    <script>
+        let watchId = null;
+        let points = [];
+        let currentPosition = null;
+
+        function enableGPS() {
+            if (!navigator.geolocation) {
+                alert('GPS not supported by your browser');
+                return;
+            }
+
+            document.getElementById('gpsInfo').innerHTML = '<p class="text-blue-600 pulse">🔄 Getting GPS signal...</p>';
+
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    currentPosition = position;
+                    const accuracy = position.coords.accuracy;
+                    const lat = position.coords.latitude.toFixed(6);
+                    const lon = position.coords.longitude.toFixed(6);
+                    
+                    let accuracyClass = accuracy < 5 ? 'text-green-600' : accuracy < 10 ? 'text-blue-600' : accuracy < 20 ? 'text-yellow-600' : 'text-red-600';
+                    let accuracyText = accuracy < 5 ? 'Excellent' : accuracy < 10 ? 'Good' : accuracy < 20 ? 'Fair' : 'Poor';
+                    
+                    document.getElementById('gpsInfo').innerHTML = `
+                        <div class="space-y-2">
+                            <p class="font-semibold ${accuracyClass}">✓ GPS Active - ${accuracyText} Signal</p>
+                            <p><strong>Latitude:</strong> ${lat}°</p>
+                            <p><strong>Longitude:</strong> ${lon}°</p>
+                            <p><strong>Accuracy:</strong> ±${accuracy.toFixed(1)}m</p>
+                        </div>
+                    `;
+                    
+                    document.getElementById('surveyControls').classList.remove('hidden');
+                    document.getElementById('pointsList').classList.remove('hidden');
+                },
+                (error) => {
+                    document.getElementById('gpsInfo').innerHTML = `<p class="text-red-600">❌ Error: ${error.message}</p>`;
+                },
+                { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+            );
+        }
+
+        function addPoint() {
+            if (!currentPosition) {
+                alert('Waiting for GPS signal...');
+                return;
+            }
+
+            const point = {
+                lat: currentPosition.coords.latitude,
+                lon: currentPosition.coords.longitude,
+                accuracy: currentPosition.coords.accuracy,
+                timestamp: new Date()
+            };
+
+            points.push(point);
+            document.getElementById('pointCount').textContent = points.length;
+
+            updatePointsList();
+        }
+
+        function updatePointsList() {
+            const html = points.map((p, i) => `
+                <div class="p-3 bg-gray-50 rounded-lg">
+                    <p class="font-semibold">Point ${i + 1}</p>
+                    <p class="text-sm text-gray-600">Lat: ${p.lat.toFixed(6)}°, Lon: ${p.lon.toFixed(6)}°</p>
+                    <p class="text-xs text-gray-500">Accuracy: ±${p.accuracy.toFixed(1)}m</p>
+                </div>
+            `).join('');
+            
+            document.getElementById('pointsContent').innerHTML = html || '<p class="text-gray-500">No points captured yet</p>';
+        }
+
+        function completeSurvey() {
+            if (points.length < 3) {
+                alert('Need at least 3 points to complete survey');
+                return;
+            }
+
+            // Calculate area using Shoelace formula
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                area += points[i].lat * points[j].lon;
+                area -= points[j].lat * points[i].lon;
+            }
+            area = Math.abs(area / 2);
+            
+            // Convert to square meters (rough approximation)
+            const areaM2 = area * 111320 * 111320 * Math.cos(points[0].lat * Math.PI / 180);
+            const hectares = areaM2 / 10000;
+
+            // Calculate perimeter
+            let perimeter = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                const dx = (points[j].lat - points[i].lat) * 111320;
+                const dy = (points[j].lon - points[i].lon) * 111320 * Math.cos(points[i].lat * Math.PI / 180);
+                perimeter += Math.sqrt(dx * dx + dy * dy);
+            }
+
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="p-4 bg-green-50 border-2 border-green-500 rounded-lg">
+                    <p class="text-xl font-bold text-green-800">Survey Complete! ✓</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-blue-50 rounded-lg">
+                        <p class="text-sm text-gray-600">Area</p>
+                        <p class="text-2xl font-bold text-blue-800">${hectares.toFixed(4)} ha</p>
+                        <p class="text-xs text-gray-500">${areaM2.toFixed(2)} m²</p>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-lg">
+                        <p class="text-sm text-gray-600">Perimeter</p>
+                        <p class="text-2xl font-bold text-purple-800">${perimeter.toFixed(2)} m</p>
+                    </div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">Points Captured</p>
+                    <p class="text-lg font-bold">${points.length} points</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <p class="text-sm text-gray-600">Date</p>
+                    <p class="text-lg font-bold">${new Date().toLocaleDateString('en-NG')}</p>
+                </div>
+            `;
+
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('surveyControls').classList.add('hidden');
+
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        }
+
+        function newSurvey() {
+            points = [];
+            currentPosition = null;
+            document.getElementById('pointCount').textContent = '0';
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('surveyControls').classList.add('hidden');
+            document.getElementById('pointsList').classList.add('hidden');
+            document.getElementById('gpsInfo').innerHTML = '<p class="text-gray-600">Click "Enable GPS" to start surveying</p>';
+            updatePointsList();
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+        }
+    </script>
+</body>
+</html>
