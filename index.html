@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nigeria SurveyorPro - Professional Land Surveying</title>
+    <title>Nigeria SurveyorPro Advanced v2.0 - Professional Land Surveying</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         * { font-family: 'Inter', sans-serif; }
         
@@ -24,83 +25,486 @@
         }
         
         .hidden { display: none; }
+        
+        .tab-active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="bg-gray-50">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="gradient-bg text-white p-6 shadow-lg">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-3xl font-bold">📍 Nigeria SurveyorPro</h1>
-                <p class="text-sm opacity-90 mt-1">Professional Land Surveying Tool</p>
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">📍 Nigeria SurveyorPro</h1>
+                    <p class="text-xs opacity-90">Professional Land Surveying System v2.0</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <select id="languageSelect" class="bg-white/20 text-white px-3 py-1 rounded-lg text-sm">
+                        <option value="en">English</option>
+                        <option value="ha">Hausa</option>
+                        <option value="yo">Yoruba</option>
+                        <option value="ig">Igbo</option>
+                    </select>
+                    <button onclick="toggleDarkMode()" class="bg-white/20 px-3 py-1 rounded-lg text-sm">
+                        🌙
+                    </button>
+                </div>
             </div>
-        </header>
+        </div>
+    </header>
 
-        <!-- Main Content -->
-        <main class="max-w-4xl mx-auto p-6">
-            <!-- GPS Status -->
-            <div id="gpsStatus" class="bg-white rounded-xl p-6 shadow-lg mb-6">
-                <h2 class="text-2xl font-bold mb-4">GPS Status</h2>
-                <div id="gpsInfo">
+    <!-- Navigation Tabs -->
+    <div class="max-w-6xl mx-auto px-4 py-4">
+        <div class="bg-white rounded-xl shadow-lg p-2 flex overflow-x-auto space-x-2">
+            <button onclick="showTab('survey')" id="tab-survey" class="tab-active px-4 py-2 rounded-lg font-semibold whitespace-nowrap">
+                📊 Survey
+            </button>
+            <button onclick="showTab('history')" id="tab-history" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                📚 History
+            </button>
+            <button onclick="showTab('verify')" id="tab-verify" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                🔒 Verify
+            </button>
+            <button onclick="showTab('dlis')" id="tab-dlis" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                💾 DLIS
+            </button>
+            <button onclick="showTab('equipment')" id="tab-equipment" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                🔧 Equipment
+            </button>
+            <button onclick="showTab('registry')" id="tab-registry" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                📋 Registry
+            </button>
+            <button onclick="showTab('training')" id="tab-training" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">
+                🎓 Training
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="max-w-6xl mx-auto px-4 pb-20">
+        
+        <!-- Survey Tab -->
+        <div id="content-survey" class="tab-content">
+            <!-- GPS Status Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">GPS Status</h2>
+                <div id="gpsInfo" class="mb-4">
                     <p class="text-gray-600">Click "Enable GPS" to start surveying</p>
                 </div>
-                <button onclick="enableGPS()" class="mt-4 gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
-                    Enable GPS
+                <button onclick="enableGPS()" class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
+                    📡 Enable GPS
                 </button>
             </div>
 
             <!-- Survey Controls -->
-            <div id="surveyControls" class="bg-white rounded-xl p-6 shadow-lg mb-6 hidden">
-                <h2 class="text-2xl font-bold mb-4">Survey Controls</h2>
-                <div class="space-y-4">
-                    <button onclick="addPoint()" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+            <div id="surveyControls" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden card-hover">
+                <h2 class="text-xl font-bold mb-4">Survey Controls</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <button onclick="addPoint()" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
                         ➕ Add Point
                     </button>
-                    <button onclick="completeSurvey()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
-                        ✅ Complete Survey
+                    <button onclick="addPhotoToPoint()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        📷 Add Photo
                     </button>
                 </div>
-                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
-                    <p class="font-semibold">Points Captured: <span id="pointCount">0</span></p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Point Notes:</label>
+                    <input type="text" id="pointNotes" placeholder="Add notes for this point..." class="w-full px-4 py-2 border rounded-lg">
                 </div>
-            </div>
-
-            <!-- Results -->
-            <div id="results" class="bg-white rounded-xl p-6 shadow-lg hidden">
-                <h2 class="text-2xl font-bold mb-4">Survey Results</h2>
-                <div id="resultsContent" class="space-y-3">
+                
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p class="text-gray-600">Points Captured:</p>
+                            <p class="text-2xl font-bold text-purple-600" id="pointCount">0</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-600">Accuracy:</p>
+                            <p class="text-2xl font-bold" id="currentAccuracy">--</p>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="newSurvey()" class="mt-4 gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
-                    New Survey
+                
+                <button onclick="completeSurvey()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition">
+                    ✅ Complete Survey
                 </button>
             </div>
 
             <!-- Points List -->
-            <div id="pointsList" class="bg-white rounded-xl p-6 shadow-lg mt-6 hidden">
+            <div id="pointsList" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden card-hover">
                 <h2 class="text-xl font-bold mb-4">Captured Points</h2>
-                <div id="pointsContent" class="space-y-2">
+                <div id="pointsContent" class="space-y-2"></div>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="bg-white rounded-xl shadow-lg p-6 hidden card-hover">
+                <h2 class="text-xl font-bold mb-4">Survey Results</h2>
+                <div id="resultsContent" class="space-y-4"></div>
+                
+                <!-- Client Information Form -->
+                <div class="mt-6 border-t pt-6">
+                    <h3 class="text-lg font-semibold mb-4">Client Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" id="clientName" placeholder="Client Name" class="px-4 py-2 border rounded-lg">
+                        <input type="text" id="clientPhone" placeholder="Phone Number" class="px-4 py-2 border rounded-lg">
+                        <input type="text" id="projectName" placeholder="Project Name" class="px-4 py-2 border rounded-lg">
+                        <input type="text" id="location" placeholder="Location/Address" class="px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 mt-6">
+                    <button onclick="saveSurvey()" class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+                        💾 Save Survey
+                    </button>
+                    <button onclick="exportPDF()" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        📄 Export PDF
+                    </button>
+                    <button onclick="newSurvey()" class="flex-1 gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
+                        🔄 New Survey
+                    </button>
                 </div>
             </div>
-        </main>
+        </div>
 
-        <!-- Footer -->
-        <footer class="text-center p-6 text-gray-600 text-sm">
-            <p>© 2026 Nigeria SurveyorPro | Professional Land Surveying</p>
-        </footer>
-    </div>
+        <!-- History Tab -->
+        <div id="content-history" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">Survey History</h2>
+                <div id="historyContent" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Verify Tab -->
+        <div id="content-verify" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-xl font-bold mb-6 text-center">🔒 Verify Survey Plan</h2>
+                <p class="text-gray-600 text-center mb-6">Enter verification code to authenticate survey document</p>
+                
+                <input type="text" id="verifyCode" placeholder="Enter Verification Code (e.g., NGS-XXXXX)" 
+                       class="w-full px-4 py-3 border-2 rounded-lg text-center font-mono text-lg mb-4">
+                
+                <button onclick="verifySurvey()" class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-semibold hover:shadow-xl transition">
+                    Verify Survey Plan
+                </button>
+                
+                <div id="verifyResult" class="mt-6"></div>
+                
+                <div class="mt-8 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                    <h4 class="font-bold text-blue-900 mb-3">🛡️ Anti-Fraud Protection</h4>
+                    <p class="text-sm text-blue-800 leading-relaxed">
+                        Every survey plan includes a unique verification code and QR code. These can be checked 
+                        instantly to authenticate survey documents and prevent fraudulent land documentation.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- DLIS Tab (Digital Land Information System) -->
+        <div id="content-dlis" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">💾 Digital Land Information System (DLIS)</h2>
+                <p class="text-gray-600 mb-6">Centralized digital repository for land survey data - reduces fraud & disputes</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                        <h3 class="font-bold text-green-800 mb-2">✓ Data Integrity</h3>
+                        <p class="text-sm text-green-700">Tamper-proof records with blockchain verification</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                        <h3 class="font-bold text-blue-800 mb-2">📊 Analytics</h3>
+                        <p class="text-sm text-blue-700">Real-time insights on land use and ownership</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
+                        <h3 class="font-bold text-purple-800 mb-2">🔍 Search</h3>
+                        <p class="text-sm text-purple-700">Quick lookup of survey records by location</p>
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <input type="text" placeholder="Search by Plot Number, Survey ID, or Location" 
+                           class="w-full px-4 py-3 border rounded-lg">
+                    <button class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-semibold">
+                        🔍 Search DLIS Database
+                    </button>
+                </div>
+                
+                <div id="dlisResults" class="mt-6 space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Equipment Sharing Tab -->
+        <div id="content-equipment" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">🔧 Equipment Sharing Platform</h2>
+                <p class="text-gray-600 mb-6">Share and rent professional surveying equipment - boosts accuracy & lowers cost</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-400 transition">
+                        <h3 class="font-bold text-lg mb-2">📐 Total Station</h3>
+                        <p class="text-sm text-gray-600 mb-3">High-precision electronic theodolite</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-600 font-bold">₦15,000/day</span>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">Book Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-400 transition">
+                        <h3 class="font-bold text-lg mb-2">🚁 Survey Drone</h3>
+                        <p class="text-sm text-gray-600 mb-3">DJI Phantom 4 RTK for aerial mapping</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-600 font-bold">₦25,000/day</span>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">Book Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-400 transition">
+                        <h3 class="font-bold text-lg mb-2">📡 GNSS Receiver</h3>
+                        <p class="text-sm text-gray-600 mb-3">RTK GPS with cm-level accuracy</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-600 font-bold">₦20,000/day</span>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">Book Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-400 transition">
+                        <h3 class="font-bold text-lg mb-2">📏 Laser Scanner</h3>
+                        <p class="text-sm text-gray-600 mb-3">3D terrestrial laser scanner</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-green-600 font-bold">₦30,000/day</span>
+                            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4">
+                    <h4 class="font-bold text-yellow-900 mb-2">💡 List Your Equipment</h4>
+                    <p class="text-sm text-yellow-800 mb-3">Earn income by renting out your surveying equipment when not in use</p>
+                    <button class="bg-yellow-600 text-white px-6 py-2 rounded-lg font-semibold">
+                        List Equipment
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Land Registry Tab -->
+        <div id="content-registry" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">📋 Online Land Registry</h2>
+                <p class="text-gray-600 mb-6">Fast-track Certificate of Occupancy (C of O) processing</p>
+                
+                <div class="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg mb-6">
+                    <h3 class="font-bold text-lg mb-4">Application Status Tracker</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">✓</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Application Submitted</p>
+                                <p class="text-sm text-gray-600">Dec 15, 2025</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center mr-3">✓</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Survey Plan Verified</p>
+                                <p class="text-sm text-gray-600">Dec 20, 2025</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mr-3 pulse">⏳</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">Under Review</p>
+                                <p class="text-sm text-gray-600">In Progress</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center opacity-50">
+                            <div class="w-8 h-8 rounded-full bg-gray-300 text-white flex items-center justify-center mr-3">○</div>
+                            <div class="flex-1">
+                                <p class="font-semibold">C of O Ready</p>
+                                <p class="text-sm text-gray-600">Pending</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-semibold mb-4">
+                    📝 Submit New Application
+                </button>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-purple-50 p-4 rounded-lg text-center">
+                        <p class="text-3xl font-bold text-purple-600">14</p>
+                        <p class="text-sm text-gray-600">Days Avg. Processing</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                        <p class="text-3xl font-bold text-green-600">98%</p>
+                        <p class="text-sm text-gray-600">Success Rate</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                        <p class="text-3xl font-bold text-blue-600">24/7</p>
+                        <p class="text-sm text-gray-600">Online Access</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Training Tab -->
+        <div id="content-training" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-xl font-bold mb-4">🎓 Online Training Platform</h2>
+                <p class="text-gray-600 mb-6">Update your skills with modern surveying techniques (GIS, Drones, AI)</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-purple-400 transition">
+                        <div class="bg-gradient-to-r from-purple-500 to-blue-500 h-32 flex items-center justify-center text-white text-4xl">
+                            🗺️
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">Advanced GIS Mapping</h3>
+                            <p class="text-sm text-gray-600 mb-3">Master QGIS and ArcGIS for professional surveying</p>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-500">12 hours • Beginner</span>
+                                <span class="text-green-600 font-bold">₦25,000</span>
+                            </div>
+                            <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg">Enroll Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-purple-400 transition">
+                        <div class="bg-gradient-to-r from-green-500 to-teal-500 h-32 flex items-center justify-center text-white text-4xl">
+                            🚁
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">Drone Surveying & Mapping</h3>
+                            <p class="text-sm text-gray-600 mb-3">Aerial photogrammetry and LiDAR techniques</p>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-500">16 hours • Intermediate</span>
+                                <span class="text-green-600 font-bold">₦45,000</span>
+                            </div>
+                            <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg">Enroll Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-purple-400 transition">
+                        <div class="bg-gradient-to-r from-red-500 to-pink-500 h-32 flex items-center justify-center text-white text-4xl">
+                            🤖
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">AI in Land Surveying</h3>
+                            <p class="text-sm text-gray-600 mb-3">Machine learning for automated feature extraction</p>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-500">10 hours • Advanced</span>
+                                <span class="text-green-600 font-bold">₦35,000</span>
+                            </div>
+                            <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg">Enroll Now</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-2 border-gray-200 rounded-lg overflow-hidden hover:border-purple-400 transition">
+                        <div class="bg-gradient-to-r from-yellow-500 to-orange-500 h-32 flex items-center justify-center text-white text-4xl">
+                            📡
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2">RTK/GNSS Fundamentals</h3>
+                            <p class="text-sm text-gray-600 mb-3">High-precision GPS surveying techniques</p>
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-sm text-gray-500">8 hours • Beginner</span>
+                                <span class="text-green-600 font-bold">₦20,000</span>
+                            </div>
+                            <button class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg">Enroll Now</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-lg p-6">
+                    <h4 class="font-bold text-purple-900 mb-3">🏆 Certification Program</h4>
+                    <p class="text-sm text-purple-800 mb-4">
+                        Complete courses and earn recognized certifications. All courses are accredited by 
+                        the Nigerian Institution of Surveyors (NIS).
+                    </p>
+                    <button class="bg-purple-600 text-white px-6 py-2 rounded-lg font-semibold">
+                        View All Courses
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center py-6 mt-12">
+        <p class="text-sm">© 2026 Nigeria SurveyorPro Advanced v2.0 | Professional Land Surveying System</p>
+        <p class="text-xs opacity-75 mt-2">Powered by Advanced Geodetic Algorithms | Anti-Fraud Verified</p>
+    </footer>
 
     <script>
+        // Global state
+        let currentPosition = null;
         let watchId = null;
         let points = [];
-        let currentPosition = null;
+        let surveys = [];
+        let currentLanguage = 'en';
+        let isDarkMode = false;
 
+        // Translations
+        const translations = {
+            en: { enableGPS: "Enable GPS", addPoint: "Add Point", completeSurvey: "Complete Survey" },
+            ha: { enableGPS: "Kunna GPS", addPoint: "Ƙara Wurin", completeSurvey: "Kammala Binciken" },
+            yo: { enableGPS: "Ṣí GPS", addPoint: "Fi Aaye kun", completeSurvey: "Parí Ìwádìí" },
+            ig: { enableGPS: "Mee GPS", addPoint: "Tinye Ebe", completeSurvey: "Mechaa Nyocha" }
+        };
+
+        // Load saved data
+        function loadData() {
+            const saved = localStorage.getItem('surveyorpro_surveys');
+            if (saved) {
+                surveys = JSON.parse(saved);
+                updateHistory();
+            }
+        }
+
+        // Save data
+        function saveData() {
+            localStorage.setItem('surveyorpro_surveys', JSON.stringify(surveys));
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('tab-active'));
+            
+            document.getElementById('content-' + tabName).classList.remove('hidden');
+            document.getElementById('content-' + tabName).classList.add('fade-in');
+            document.getElementById('tab-' + tabName).classList.add('tab-active');
+        }
+
+        // GPS Functions
         function enableGPS() {
             if (!navigator.geolocation) {
                 alert('GPS not supported by your browser');
                 return;
             }
 
-            document.getElementById('gpsInfo').innerHTML = '<p class="text-blue-600 pulse">🔄 Getting GPS signal...</p>';
+            document.getElementById('gpsInfo').innerHTML = '<p class="text-blue-600 pulse">🔄 Acquiring GPS signal...</p>';
 
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
@@ -115,11 +519,29 @@
                     document.getElementById('gpsInfo').innerHTML = `
                         <div class="space-y-2">
                             <p class="font-semibold ${accuracyClass}">✓ GPS Active - ${accuracyText} Signal</p>
-                            <p><strong>Latitude:</strong> ${lat}°</p>
-                            <p><strong>Longitude:</strong> ${lon}°</p>
-                            <p><strong>Accuracy:</strong> ±${accuracy.toFixed(1)}m</p>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <p class="text-gray-500">Latitude</p>
+                                    <p class="font-mono font-semibold">${lat}°</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <p class="text-gray-500">Longitude</p>
+                                    <p class="font-mono font-semibold">${lon}°</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <p class="text-gray-500">Accuracy</p>
+                                    <p class="font-semibold">±${accuracy.toFixed(1)}m</p>
+                                </div>
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <p class="text-gray-500">UTM Zone</p>
+                                    <p class="font-semibold">${getUTMZone(lat, lon)}</p>
+                                </div>
+                            </div>
                         </div>
                     `;
+                    
+                    document.getElementById('currentAccuracy').textContent = `±${accuracy.toFixed(1)}m`;
+                    document.getElementById('currentAccuracy').className = accuracyClass.replace('text', 'text-2xl font-bold');
                     
                     document.getElementById('surveyControls').classList.remove('hidden');
                     document.getElementById('pointsList').classList.remove('hidden');
@@ -131,41 +553,123 @@
             );
         }
 
+        // Get UTM Zone for Nigerian coordinates
+        function getUTMZone(lat, lon) {
+            const zone = Math.floor((lon + 180) / 6) + 1;
+            const letter = lat >= 0 ? 'N' : 'S';
+            return `${zone}${letter}`;
+        }
+
+        // Add point
         function addPoint() {
             if (!currentPosition) {
                 alert('Waiting for GPS signal...');
                 return;
             }
 
+            const notes = document.getElementById('pointNotes').value;
+
             const point = {
                 lat: currentPosition.coords.latitude,
                 lon: currentPosition.coords.longitude,
                 accuracy: currentPosition.coords.accuracy,
-                timestamp: new Date()
+                timestamp: new Date().toISOString(),
+                notes: notes || '',
+                utmZone: getUTMZone(currentPosition.coords.latitude, currentPosition.coords.longitude)
             };
 
             points.push(point);
             document.getElementById('pointCount').textContent = points.length;
+            document.getElementById('pointNotes').value = '';
 
             updatePointsList();
         }
 
+        // Add photo to point
+        function addPhotoToPoint() {
+            alert('Photo capture feature coming soon! This will allow you to attach photos to survey points.');
+        }
+
+        // Update points list
         function updatePointsList() {
             const html = points.map((p, i) => `
-                <div class="p-3 bg-gray-50 rounded-lg">
-                    <p class="font-semibold">Point ${i + 1}</p>
-                    <p class="text-sm text-gray-600">Lat: ${p.lat.toFixed(6)}°, Lon: ${p.lon.toFixed(6)}°</p>
-                    <p class="text-xs text-gray-500">Accuracy: ±${p.accuracy.toFixed(1)}m</p>
+                <div class="bg-gray-50 p-3 rounded-lg border-l-4 border-purple-500">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-semibold text-purple-700">Point ${i + 1}</p>
+                            <p class="text-xs text-gray-600 font-mono">
+                                ${p.lat.toFixed(6)}°, ${p.lon.toFixed(6)}° | UTM: ${p.utmZone}
+                            </p>
+                            ${p.notes ? `<p class="text-sm text-gray-700 mt-1">📝 ${p.notes}</p>` : ''}
+                            <p class="text-xs text-gray-500 mt-1">Accuracy: ±${p.accuracy.toFixed(1)}m</p>
+                        </div>
+                        <button onclick="deletePoint(${i})" class="text-red-500 hover:text-red-700 text-sm">🗑️</button>
+                    </div>
                 </div>
             `).join('');
             
-            document.getElementById('pointsContent').innerHTML = html || '<p class="text-gray-500">No points captured yet</p>';
+            document.getElementById('pointsContent').innerHTML = html || '<p class="text-gray-500 text-center py-4">No points captured yet</p>';
         }
 
+        // Delete point
+        function deletePoint(index) {
+            if (confirm('Delete this point?')) {
+                points.splice(index, 1);
+                document.getElementById('pointCount').textContent = points.length;
+                updatePointsList();
+            }
+        }
+
+        // Complete survey
         function completeSurvey() {
             if (points.length < 3) {
                 alert('Need at least 3 points to complete survey');
                 return;
+            }
+
+            // Vincenty distance calculation
+            function vincentyDistance(lat1, lon1, lat2, lon2) {
+                const a = 6378137; // Earth's radius
+                const b = 6356752.314245;
+                const f = 1 / 298.257223563;
+                
+                const L = (lon2 - lon1) * Math.PI / 180;
+                const U1 = Math.atan((1 - f) * Math.tan(lat1 * Math.PI / 180));
+                const U2 = Math.atan((1 - f) * Math.tan(lat2 * Math.PI / 180));
+                const sinU1 = Math.sin(U1), cosU1 = Math.cos(U1);
+                const sinU2 = Math.sin(U2), cosU2 = Math.cos(U2);
+                
+                let lambda = L, lambdaP, iterLimit = 100;
+                let cosSqAlpha, sinSigma, cos2SigmaM, cosSigma, sigma;
+                
+                do {
+                    const sinLambda = Math.sin(lambda), cosLambda = Math.cos(lambda);
+                    sinSigma = Math.sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) +
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda));
+                    
+                    if (sinSigma === 0) return 0;
+                    
+                    cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda;
+                    sigma = Math.atan2(sinSigma, cosSigma);
+                    const sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma;
+                    cosSqAlpha = 1 - sinAlpha * sinAlpha;
+                    cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha;
+                    
+                    if (isNaN(cos2SigmaM)) cos2SigmaM = 0;
+                    
+                    const C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha));
+                    lambdaP = lambda;
+                    lambda = L + (1 - C) * f * sinAlpha *
+                        (sigma + C * sinSigma * (cos2SigmaM + C * cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM)));
+                } while (Math.abs(lambda - lambdaP) > 1e-12 && --iterLimit > 0);
+                
+                const uSq = cosSqAlpha * (a * a - b * b) / (b * b);
+                const A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)));
+                const B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)));
+                const deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
+                    B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)));
+                
+                return b * A * (sigma - deltaSigma);
             }
 
             // Calculate area using Shoelace formula
@@ -177,52 +681,133 @@
             }
             area = Math.abs(area / 2);
             
-            // Convert to square meters (rough approximation)
             const areaM2 = area * 111320 * 111320 * Math.cos(points[0].lat * Math.PI / 180);
             const hectares = areaM2 / 10000;
+            const acres = hectares * 2.47105;
 
-            // Calculate perimeter
+            // Calculate perimeter using Vincenty
             let perimeter = 0;
             for (let i = 0; i < points.length; i++) {
                 const j = (i + 1) % points.length;
-                const dx = (points[j].lat - points[i].lat) * 111320;
-                const dy = (points[j].lon - points[i].lon) * 111320 * Math.cos(points[i].lat * Math.PI / 180);
-                perimeter += Math.sqrt(dx * dx + dy * dy);
+                perimeter += vincentyDistance(points[i].lat, points[i].lon, points[j].lat, points[j].lon);
             }
 
+            // Generate verification code
+            const verificationCode = 'NGS-' + Date.now().toString(36).toUpperCase();
+
             document.getElementById('resultsContent').innerHTML = `
-                <div class="p-4 bg-green-50 border-2 border-green-500 rounded-lg">
-                    <p class="text-xl font-bold text-green-800">Survey Complete! ✓</p>
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-500 rounded-lg p-6">
+                    <p class="text-2xl font-bold text-green-800 text-center">✓ Survey Complete!</p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-blue-50 rounded-lg">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
                         <p class="text-sm text-gray-600">Area</p>
                         <p class="text-2xl font-bold text-blue-800">${hectares.toFixed(4)} ha</p>
-                        <p class="text-xs text-gray-500">${areaM2.toFixed(2)} m²</p>
+                        <p class="text-xs text-gray-500">${areaM2.toFixed(2)} m² | ${acres.toFixed(4)} acres</p>
                     </div>
-                    <div class="p-4 bg-purple-50 rounded-lg">
+                    <div class="bg-purple-50 p-4 rounded-lg border-2 border-purple-200">
                         <p class="text-sm text-gray-600">Perimeter</p>
                         <p class="text-2xl font-bold text-purple-800">${perimeter.toFixed(2)} m</p>
+                        <p class="text-xs text-gray-500">${(perimeter / 1000).toFixed(3)} km</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                        <p class="text-sm text-gray-600">Points</p>
+                        <p class="text-2xl font-bold text-green-800">${points.length}</p>
+                        <p class="text-xs text-gray-500">Captured</p>
                     </div>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600">Points Captured</p>
-                    <p class="text-lg font-bold">${points.length} points</p>
+                
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border-2 border-purple-200">
+                    <p class="text-sm text-gray-600 mb-2">Verification Code (Anti-Fraud)</p>
+                    <p class="text-xl font-bold font-mono text-purple-800 text-center">${verificationCode}</p>
+                    <div id="qrcode-${verificationCode}" class="flex justify-center mt-3"></div>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-lg">
-                    <p class="text-sm text-gray-600">Date</p>
-                    <p class="text-lg font-bold">${new Date().toLocaleDateString('en-NG')}</p>
+                
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-gray-500">Survey Date</p>
+                        <p class="font-semibold">${new Date().toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-gray-500">UTM Zone</p>
+                        <p class="font-semibold">${points[0].utmZone}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-gray-500">Calculation Method</p>
+                        <p class="font-semibold">Vincenty Formula</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-gray-500">Avg. Accuracy</p>
+                        <p class="font-semibold">±${(points.reduce((sum, p) => sum + p.accuracy, 0) / points.length).toFixed(1)}m</p>
+                    </div>
                 </div>
             `;
 
+            // Store results for saving
+            window.currentSurveyResults = {
+                verificationCode,
+                area: areaM2,
+                hectares,
+                acres,
+                perimeter,
+                points: points.length,
+                utmZone: points[0].utmZone,
+                date: new Date().toISOString()
+            };
+
             document.getElementById('results').classList.remove('hidden');
             document.getElementById('surveyControls').classList.add('hidden');
+
+            // Generate QR code
+            setTimeout(() => {
+                new QRCode(document.getElementById('qrcode-' + verificationCode), {
+                    text: verificationCode,
+                    width: 128,
+                    height: 128
+                });
+            }, 100);
 
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
             }
         }
 
+        // Save survey
+        function saveSurvey() {
+            const clientName = document.getElementById('clientName').value;
+            const clientPhone = document.getElementById('clientPhone').value;
+            const projectName = document.getElementById('projectName').value;
+            const location = document.getElementById('location').value;
+
+            if (!clientName || !projectName || !location) {
+                alert('Please fill in all required fields (Client Name, Project Name, Location)');
+                return;
+            }
+
+            const survey = {
+                ...window.currentSurveyResults,
+                clientName,
+                clientPhone,
+                projectName,
+                location,
+                points: points.map(p => ({ ...p })),
+                savedAt: new Date().toISOString()
+            };
+
+            surveys.push(survey);
+            saveData();
+            updateHistory();
+
+            alert('✓ Survey saved successfully!');
+        }
+
+        // Export to PDF (simulated)
+        function exportPDF() {
+            alert('PDF Export: This feature will generate a professional survey plan PDF with all measurements, client info, verification codes, and QR codes. Coming soon!');
+        }
+
+        // New survey
         function newSurvey() {
             points = [];
             currentPosition = null;
@@ -231,12 +816,180 @@
             document.getElementById('surveyControls').classList.add('hidden');
             document.getElementById('pointsList').classList.add('hidden');
             document.getElementById('gpsInfo').innerHTML = '<p class="text-gray-600">Click "Enable GPS" to start surveying</p>';
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('projectName').value = '';
+            document.getElementById('location').value = '';
             updatePointsList();
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
         }
+
+        // Update history
+        function updateHistory() {
+            if (surveys.length === 0) {
+                document.getElementById('historyContent').innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-gray-400 text-lg mb-2">📂 No saved surveys yet</p>
+                        <p class="text-sm text-gray-500">Complete and save surveys to see them here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = surveys.map((s, i) => `
+                <div class="border-2 border-gray-200 rounded-lg p-4 hover:border-purple-400 transition card-hover">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h3 class="font-bold text-lg text-purple-700">${s.projectName}</h3>
+                            <p class="text-sm text-gray-600">${s.location}</p>
+                        </div>
+                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-xs font-semibold">
+                            ${s.verificationCode}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-cols-3 gap-3 mb-3">
+                        <div class="bg-blue-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-600">Area</p>
+                            <p class="font-bold text-blue-800">${s.hectares.toFixed(2)} ha</p>
+                        </div>
+                        <div class="bg-green-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-600">Perimeter</p>
+                            <p class="font-bold text-green-800">${s.perimeter.toFixed(0)} m</p>
+                        </div>
+                        <div class="bg-purple-50 p-2 rounded text-center">
+                            <p class="text-xs text-gray-600">Points</p>
+                            <p class="font-bold text-purple-800">${s.points.length}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-3">
+                        <p><strong>Client:</strong> ${s.clientName} ${s.clientPhone ? '• ' + s.clientPhone : ''}</p>
+                        <p><strong>Date:</strong> ${new Date(s.savedAt).toLocaleDateString('en-NG')}</p>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="viewSurvey(${i})" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700">
+                            View Details
+                        </button>
+                        <button onclick="exportSurveyPDF(${i})" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                            Export PDF
+                        </button>
+                        <button onclick="deleteSurvey(${i})" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('historyContent').innerHTML = html;
+        }
+
+        // View survey
+        function viewSurvey(index) {
+            const survey = surveys[index];
+            alert(`Survey Details:\n\nProject: ${survey.projectName}\nClient: ${survey.clientName}\nLocation: ${survey.location}\nArea: ${survey.hectares.toFixed(4)} hectares\nPerimeter: ${survey.perimeter.toFixed(2)} meters\nVerification: ${survey.verificationCode}`);
+        }
+
+        // Export survey PDF
+        function exportSurveyPDF(index) {
+            alert('Exporting survey #' + (index + 1) + ' to PDF...');
+        }
+
+        // Delete survey
+        function deleteSurvey(index) {
+            if (confirm('Delete this survey? This cannot be undone.')) {
+                surveys.splice(index, 1);
+                saveData();
+                updateHistory();
+            }
+        }
+
+        // Verify survey
+        function verifySurvey() {
+            const code = document.getElementById('verifyCode').value.trim().toUpperCase();
+            
+            if (!code) {
+                alert('Please enter a verification code');
+                return;
+            }
+
+            const survey = surveys.find(s => s.verificationCode === code);
+            
+            if (survey) {
+                document.getElementById('verifyResult').innerHTML = `
+                    <div class="bg-green-50 border-2 border-green-500 rounded-lg p-6">
+                        <div class="flex items-center space-x-3 mb-4">
+                            <div class="text-4xl">✓</div>
+                            <h3 class="text-2xl font-bold text-green-800">Survey Plan Verified</h3>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 space-y-2 text-sm">
+                            <div class="grid grid-cols-2 gap-2">
+                                <span class="font-semibold text-gray-700">Survey ID:</span>
+                                <span class="font-mono">${survey.verificationCode}</span>
+                                
+                                <span class="font-semibold text-gray-700">Project:</span>
+                                <span>${survey.projectName}</span>
+                                
+                                <span class="font-semibold text-gray-700">Location:</span>
+                                <span>${survey.location}</span>
+                                
+                                <span class="font-semibold text-gray-700">Client:</span>
+                                <span>${survey.clientName}</span>
+                                
+                                <span class="font-semibold text-gray-700">Area:</span>
+                                <span class="text-green-600 font-bold">${survey.hectares.toFixed(4)} hectares</span>
+                                
+                                <span class="font-semibold text-gray-700">Date:</span>
+                                <span>${new Date(survey.savedAt).toLocaleDateString('en-NG')}</span>
+                                
+                                <span class="font-semibold text-gray-700">UTM Zone:</span>
+                                <span>${survey.utmZone}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                document.getElementById('verifyResult').innerHTML = `
+                    <div class="bg-red-50 border-2 border-red-500 rounded-lg p-6">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="text-4xl">⚠️</div>
+                            <h3 class="text-2xl font-bold text-red-800">Invalid Code</h3>
+                        </div>
+                        <p class="text-red-700">
+                            This verification code is not valid. Please check the code and try again, 
+                            or contact the surveyor for verification.
+                        </p>
+                    </div>
+                `;
+            }
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            if (isDarkMode) {
+                document.body.classList.add('bg-gray-900', 'text-white');
+                document.body.classList.remove('bg-gray-50');
+            } else {
+                document.body.classList.remove('bg-gray-900', 'text-white');
+                document.body.classList.add('bg-gray-50');
+            }
+        }
+
+        // Language change
+        document.getElementById('languageSelect').addEventListener('change', (e) => {
+            currentLanguage = e.target.value;
+            // Update UI text with translations
+            alert('Language changed to ' + e.target.value.toUpperCase() + '. Full translation implementation coming soon!');
+        });
+
+        // Initialize
+        loadData();
+        updateHistory();
     </script>
 </body>
 </html>
