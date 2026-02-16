@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surveypro - Complete Professional Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .hidden { display: none; }
+        .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); transition: 0.3s; }
+        canvas { border: 1px solid #ccc; border-radius: 8px; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    
+    <!-- Success Banner -->
+    <div id="banner" class="hidden fixed top-0 left-0 right-0 z-50"></div>
+
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">📍 Surveypro</h1>
+                    <p class="text-xs opacity-90">Complete Professional Platform | Market Ready</p>
+                </div>
+                <button onclick="toggleDark()" class="bg-white/20 px-3 py-2 rounded-lg">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Tabs -->
+    <div class="max-w-6xl mx-auto px-4 py-4">
+        <div class="bg-white rounded-xl shadow-lg p-2 flex overflow-x-auto space-x-2">
+            <button onclick="showTab('survey')" id="tab-survey" class="tab-active px-4 py-2 rounded-lg font-semibold whitespace-nowrap">📊 Survey</button>
+            <button onclick="showTab('advanced')" id="tab-advanced" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">🎯 Advanced</button>
+            <button onclick="showTab('tools')" id="tab-tools" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">🛠️ Tools</button>
+            <button onclick="showTab('verify')" id="tab-verify" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">🔒 C of O</button>
+            <button onclick="showTab('equipment')" id="tab-equipment" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">🔧 Equipment</button>
+            <button onclick="showTab('training')" id="tab-training" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">🎓 Training</button>
+            <button onclick="showTab('services')" id="tab-services" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap hover:bg-gray-100">💼 Services</button>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <main class="max-w-6xl mx-auto px-4 pb-20">
+        
+        <!-- Survey Tab -->
+        <div id="content-survey" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">GPS Survey</h2>
+                <div id="gpsInfo" class="mb-4"><p class="text-gray-600">Click Enable GPS to start</p></div>
+                <button onclick="enableGPS()" class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-bold">📡 Enable GPS</button>
+            </div>
+            
+            <div id="controls" class="hidden bg-white rounded-xl shadow-lg p-6 mb-6">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <button onclick="addPoint()" class="bg-green-600 text-white px-6 py-3 rounded-lg font-bold">➕ Add Point</button>
+                    <button onclick="undoPoint()" class="bg-yellow-600 text-white px-6 py-3 rounded-lg font-bold">↩️ Undo</button>
+                </div>
+                <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p class="text-2xl font-bold text-purple-600" id="pointCount">0</p>
+                    <p class="text-sm text-gray-600">Points Captured</p>
+                </div>
+                <button onclick="completeSurvey()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">✅ Complete Survey</button>
+            </div>
+            
+            <div id="results" class="hidden bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-xl font-bold mb-4">Survey Results</h2>
+                <div id="resultsContent"></div>
+                <button onclick="newSurvey()" class="w-full mt-4 gradient-bg text-white px-6 py-3 rounded-lg font-bold">🔄 New Survey</button>
+            </div>
+        </div>
+
+        <!-- Advanced Tab - NEW! -->
+        <div id="content-advanced" class="tab-content hidden">
+            
+            <!-- Plot by Bearing & Distance -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📐 Plot by Bearing & Distance</h3>
+                <p class="text-sm text-gray-600 mb-4">Professional traverse plotting for surveyors</p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Starting Point (Lat, Lon)</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="number" id="startLat" step="0.000001" placeholder="Latitude" class="px-4 py-2 border rounded-lg">
+                        <input type="number" id="startLon" step="0.000001" placeholder="Longitude" class="px-4 py-2 border rounded-lg">
+                    </div>
+                </div>
+                
+                <div id="traverseLines" class="space-y-2 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <input type="number" placeholder="Bearing (°)" class="traverse-bearing px-3 py-2 border rounded-lg text-sm">
+                        <input type="number" placeholder="Distance (m)" class="traverse-distance px-3 py-2 border rounded-lg text-sm">
+                        <button onclick="addTraverseLine()" class="bg-green-600 text-white px-3 py-2 rounded-lg text-sm">+</button>
+                    </div>
+                </div>
+                
+                <button onclick="calculateTraverse()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold mb-4">Calculate Traverse</button>
+                
+                <canvas id="traverseCanvas" width="600" height="400" class="hidden w-full"></canvas>
+                <div id="traverseResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+            </div>
+
+            <!-- Plot by Coordinates -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h3 class="text-xl font-bold mb-4">📍 Plot by Coordinates</h3>
+                <p class="text-sm text-gray-600 mb-4">Import coordinates and visualize boundary</p>
+                
+                <textarea id="coordInput" placeholder="Enter coordinates (one per line)&#10;Example:&#10;6.524379, 3.379206&#10;6.524500, 3.379300&#10;6.524600, 3.379250" class="w-full px-4 py-3 border rounded-lg mb-4" rows="6"></textarea>
+                
+                <button onclick="plotCoordinates()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-bold mb-4">Plot Boundary</button>
+                
+                <canvas id="coordCanvas" width="600" height="400" class="hidden w-full"></canvas>
+                <div id="coordResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+            </div>
+
+        </div>
+
+        <!-- Tools Tab -->
+        <div id="content-tools" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Coordinate Converter -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">🧭 Coordinate Converter</h3>
+                    <input type="number" id="lat" step="0.000001" placeholder="Latitude" class="w-full px-4 py-3 border rounded-lg mb-3">
+                    <input type="number" id="lon" step="0.000001" placeholder="Longitude" class="w-full px-4 py-3 border rounded-lg mb-4">
+                    <button onclick="convertCoords()" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Convert to UTM</button>
+                    <div id="coordResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                </div>
+
+                <!-- Area Calculator -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">📐 Area Converter</h3>
+                    <input type="number" id="areaVal" step="0.0001" placeholder="Value" class="w-full px-4 py-3 border rounded-lg mb-3">
+                    <select id="fromUnit" class="w-full px-4 py-3 border rounded-lg mb-4">
+                        <option value="hectares">Hectares</option>
+                        <option value="acres">Acres</option>
+                        <option value="sqm">Square Meters</option>
+                        <option value="plots">Plots (500sqm)</option>
+                    </select>
+                    <button onclick="convertArea()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">Convert</button>
+                    <div id="areaResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                </div>
+
+                <!-- Distance Calculator -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">📏 Distance Calculator</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <input type="number" id="lat1" step="0.000001" placeholder="Lat 1" class="px-3 py-2 border rounded-lg text-sm">
+                        <input type="number" id="lon1" step="0.000001" placeholder="Lon 1" class="px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <input type="number" id="lat2" step="0.000001" placeholder="Lat 2" class="px-3 py-2 border rounded-lg text-sm">
+                        <input type="number" id="lon2" step="0.000001" placeholder="Lon 2" class="px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <button onclick="calcDistance()" class="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-bold">Calculate</button>
+                    <div id="distResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                </div>
+
+                <!-- Bearing Calculator -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-4">🧭 Bearing Calculator</h3>
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <input type="number" id="bearLat1" step="0.000001" placeholder="From Lat" class="px-3 py-2 border rounded-lg text-sm">
+                        <input type="number" id="bearLon1" step="0.000001" placeholder="From Lon" class="px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-4">
+                        <input type="number" id="bearLat2" step="0.000001" placeholder="To Lat" class="px-3 py-2 border rounded-lg text-sm">
+                        <input type="number" id="bearLon2" step="0.000001" placeholder="To Lon" class="px-3 py-2 border rounded-lg text-sm">
+                    </div>
+                    <button onclick="calcBearing()" class="w-full bg-yellow-600 text-white px-6 py-3 rounded-lg font-bold">Calculate</button>
+                    <div id="bearResult" class="hidden mt-4 p-4 bg-gray-50 rounded-lg"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- C of O Verification Tab - NEW! -->
+        <div id="content-verify" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">🔒 Certificate of Occupancy Verification</h2>
+                <p class="text-gray-600 mb-6">Detect fake C of O documents with professional analysis</p>
+                
+                <div class="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-6">
+                    <h4 class="font-bold text-yellow-900 mb-3">⚠️ Common Fraud Indicators:</h4>
+                    <ul class="text-sm text-yellow-800 space-y-2">
+                        <li>✓ Incorrect government seal or watermark</li>
+                        <li>✓ Wrong file number format</li>
+                        <li>✓ Suspicious signatures</li>
+                        <li>✓ Coordinates outside valid range</li>
+                        <li>✓ Incorrect land registry details</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-4">
+                    <input type="text" id="cofFile" placeholder="C of O File Number (e.g., LCN/123/456)" class="w-full px-4 py-3 border-2 rounded-lg">
+                    <input type="text" id="cofCoords" placeholder="Property Coordinates (Lat, Lon)" class="w-full px-4 py-3 border-2 rounded-lg">
+                    <input type="text" id="cofRegistry" placeholder="Land Registry Office" class="w-full px-4 py-3 border-2 rounded-lg">
+                    <button onclick="verifyCofO()" class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-bold">Analyze Document</button>
+                </div>
+
+                <div id="verifyResult" class="hidden mt-6"></div>
+
+                <div class="mt-8 bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+                    <h4 class="font-bold text-blue-900 mb-3">📞 Need Professional Verification?</h4>
+                    <p class="text-sm text-blue-800 mb-4">For comprehensive C of O verification and land registry checks, contact our licensed surveyors.</p>
+                    <button onclick="contactForVerification()" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-bold">Contact Professional Surveyor</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Tab -->
+        <div id="content-equipment" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="equipmentList"></div>
+        </div>
+
+        <!-- Training Tab -->
+        <div id="content-training" class="tab-content hidden">
+            <div class="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 mb-6">
+                <h4 class="font-bold text-yellow-900 mb-3">💰 Payment Information</h4>
+                <p class="text-sm text-yellow-800 mb-3">Pay via bank transfer to enroll:</p>
+                <div class="bg-white p-4 rounded-lg">
+                    <p class="font-bold">Bank: Opay</p>
+                    <p class="font-bold">Account: 8117554948</p>
+                    <p class="font-bold">Name: Surveypro</p>
+                </div>
+                <p class="text-xs text-yellow-700 mt-3">After payment, WhatsApp proof to +234-811-755-4948</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="trainingList"></div>
+        </div>
+
+        <!-- Services Tab -->
+        <div id="content-services" class="tab-content hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">📐 Topographic Survey</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦150,000</p>
+                    <button onclick="requestQuote('Topographic Survey')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">🏘️ Cadastral Survey</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦100,000</p>
+                    <button onclick="requestQuote('Cadastral Survey')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">🚁 Drone Mapping</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦250,000</p>
+                    <button onclick="requestQuote('Drone Mapping')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">🗺️ GIS Mapping</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦180,000</p>
+                    <button onclick="requestQuote('GIS Mapping')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">✅ C of O Verification</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦50,000</p>
+                    <button onclick="requestQuote('C of O Verification')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-2">📄 Land Registry Search</h3>
+                    <p class="text-2xl font-bold text-green-600 mb-4">From ₦30,000</p>
+                    <button onclick="requestQuote('Land Registry Search')" class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg font-bold">Get Quote</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white text-center py-6 mt-12">
+        <p class="font-bold mb-2">📍 Surveypro - Complete Professional Platform</p>
+        <p class="text-sm mb-2">📞 +234-811-755-4948 | 📧 opusarnold@gmail.com</p>
+        <p class="text-sm mb-2">💰 Opay: 8117554948</p>
+        <p class="text-xs text-gray-400 mt-2">© 2026 Surveypro. Licensed Professional Surveyors.</p>
+    </footer>
+
+    <script>
+        // CONFIG - DO NOT MODIFY UNLESS NECESSARY
+        const CFG = {
+            phone: '2348117554948',
+            email: 'opusarnold@gmail.com',
+            opay: '8117554948',
+            paystack: 'pk_test_eccaa497055c149e45a6f21500a322cb584ec9eb'
+        };
+
+        let gps = null;
+        let watchId = null;
+        let points = [];
+        let traversePoints = [];
+
+        // UTILITIES
+        function showBanner(msg, type='success') {
+            const b = document.getElementById('banner');
+            b.className = `fixed top-0 left-0 right-0 z-50 ${type==='success'?'bg-green-500':'bg-red-500'} text-white px-6 py-4`;
+            b.innerHTML = `<div class="max-w-6xl mx-auto text-center font-bold">${msg}</div>`;
+            b.classList.remove('hidden');
+            setTimeout(() => b.classList.add('hidden'), 3000);
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => el.classList.remove('tab-active'));
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.add('tab-active');
+        }
+
+        function openWhatsApp(msg) {
+            window.open(`https://wa.me/${CFG.phone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+
+        // GPS FUNCTIONS
+        function enableGPS() {
+            if (!navigator.geolocation) {
+                showBanner('GPS not supported', 'error');
+                return;
+            }
+            document.getElementById('gpsInfo').innerHTML = '<p class="text-blue-600 font-semibold">🔄 Acquiring GPS...</p>';
+            watchId = navigator.geolocation.watchPosition(
+                pos => {
+                    gps = pos;
+                    const acc = pos.coords.accuracy;
+                    const lat = pos.coords.latitude.toFixed(6);
+                    const lon = pos.coords.longitude.toFixed(6);
+                    document.getElementById('gpsInfo').innerHTML = `
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <p class="font-bold text-green-600 mb-2">✓ GPS Active</p>
+                            <p class="text-sm"><strong>Lat:</strong> ${lat}° | <strong>Lon:</strong> ${lon}°</p>
+                            <p class="text-sm"><strong>Accuracy:</strong> ±${acc.toFixed(1)}m</p>
+                        </div>
+                    `;
+                    document.getElementById('controls').classList.remove('hidden');
+                    showBanner('GPS enabled!');
+                },
+                err => {
+                    document.getElementById('gpsInfo').innerHTML = `<p class="text-red-600">❌ ${err.message}</p>`;
+                    showBanner('GPS error', 'error');
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        function addPoint() {
+            if (!gps) {
+                showBanner('Waiting for GPS...', 'error');
+                return;
+            }
+            points.push({lat: gps.coords.latitude, lon: gps.coords.longitude, acc: gps.coords.accuracy});
+            document.getElementById('pointCount').textContent = points.length;
+            showBanner(`Point ${points.length} added!`);
+        }
+
+        function undoPoint() {
+            if (points.length === 0) {
+                showBanner('No points to undo', 'error');
+                return;
+            }
+            points.pop();
+            document.getElementById('pointCount').textContent = points.length;
+            showBanner('Point removed');
+        }
+
+        function completeSurvey() {
+            if (points.length < 3) {
+                showBanner('Need at least 3 points', 'error');
+                return;
+            }
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                area += points[i].lat * points[j].lon;
+                area -= points[j].lat * points[i].lon;
+            }
+            area = Math.abs(area / 2);
+            const areaM2 = area * 111320 * 111320 * Math.cos(points[0].lat * Math.PI / 180);
+            const hectares = areaM2 / 10000;
+            const acres = hectares * 2.47105;
+            let perim = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                const R = 6371000;
+                const φ1 = points[i].lat * Math.PI / 180;
+                const φ2 = points[j].lat * Math.PI / 180;
+                const Δφ = (points[j].lat - points[i].lat) * Math.PI / 180;
+                const Δλ = (points[j].lon - points[i].lon) * Math.PI / 180;
+                const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                perim += R * c;
+            }
+            const code = 'NGS-' + Date.now().toString(36).toUpperCase();
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="bg-green-50 p-6 rounded-xl mb-4">
+                    <p class="text-2xl font-bold text-green-800 text-center">✓ Survey Complete!</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-600">Hectares</p>
+                        <p class="text-2xl font-bold text-blue-800">${hectares.toFixed(4)}</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-600">Acres</p>
+                        <p class="text-2xl font-bold text-green-800">${acres.toFixed(4)}</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-600">Sq. Meters</p>
+                        <p class="text-2xl font-bold text-purple-800">${areaM2.toFixed(2)}</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-xs text-gray-600">Perimeter</p>
+                        <p class="text-2xl font-bold text-yellow-800">${perim.toFixed(2)}m</p>
+                    </div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg text-center">
+                    <p class="text-sm text-gray-600 mb-2">Verification Code</p>
+                    <p class="text-2xl font-bold font-mono text-purple-800">${code}</p>
+                </div>
+            `;
+            document.getElementById('results').classList.remove('hidden');
+            document.getElementById('controls').classList.add('hidden');
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            showBanner('Survey completed!');
+        }
+
+        function newSurvey() {
+            if (!confirm('Start new survey?')) return;
+            points = [];
+            gps = null;
+            document.getElementById('pointCount').textContent = '0';
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('controls').classList.add('hidden');
+            document.getElementById('gpsInfo').innerHTML = '<p class="text-gray-600">Click Enable GPS to start</p>';
+            if (watchId) navigator.geolocation.clearWatch(watchId);
+            showBanner('Ready for new survey');
+        }
+
+        // ADVANCED TOOLS
+        let traverseLines = [{bearing: '', distance: ''}];
+
+        function addTraverseLine() {
+            traverseLines.push({bearing: '', distance: ''});
+            const container = document.getElementById('traverseLines');
+            const newLine = document.createElement('div');
+            newLine.className = 'grid grid-cols-3 gap-2';
+            newLine.innerHTML = `
+                <input type="number" placeholder="Bearing (°)" class="traverse-bearing px-3 py-2 border rounded-lg text-sm">
+                <input type="number" placeholder="Distance (m)" class="traverse-distance px-3 py-2 border rounded-lg text-sm">
+                <button onclick="removeTraverseLine(this)" class="bg-red-600 text-white px-3 py-2 rounded-lg text-sm">−</button>
+            `;
+            container.appendChild(newLine);
+        }
+
+        function removeTraverseLine(btn) {
+            btn.parentElement.remove();
+        }
+
+        function calculateTraverse() {
+            const startLat = parseFloat(document.getElementById('startLat').value);
+            const startLon = parseFloat(document.getElementById('startLon').value);
+            if (isNaN(startLat) || isNaN(startLon)) {
+                showBanner('Enter starting coordinates', 'error');
+                return;
+            }
+            
+            const bearings = Array.from(document.querySelectorAll('.traverse-bearing')).map(el => parseFloat(el.value));
+            const distances = Array.from(document.querySelectorAll('.traverse-distance')).map(el => parseFloat(el.value));
+            
+            if (bearings.some(isNaN) || distances.some(isNaN)) {
+                showBanner('Enter all bearings and distances', 'error');
+                return;
+            }
+
+            traversePoints = [{lat: startLat, lon: startLon}];
+            let currentLat = startLat;
+            let currentLon = startLon;
+
+            for (let i = 0; i < bearings.length; i++) {
+                const bearing = bearings[i] * Math.PI / 180;
+                const dist = distances[i];
+                const R = 6371000;
+                const δ = dist / R;
+                const φ1 = currentLat * Math.PI / 180;
+                const λ1 = currentLon * Math.PI / 180;
+                
+                const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(bearing));
+                const λ2 = λ1 + Math.atan2(Math.sin(bearing) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+                
+                currentLat = φ2 * 180 / Math.PI;
+                currentLon = λ2 * 180 / Math.PI;
+                traversePoints.push({lat: currentLat, lon: currentLon});
+            }
+
+            // Draw on canvas
+            const canvas = document.getElementById('traverseCanvas');
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const minLat = Math.min(...traversePoints.map(p => p.lat));
+            const maxLat = Math.max(...traversePoints.map(p => p.lat));
+            const minLon = Math.min(...traversePoints.map(p => p.lon));
+            const maxLon = Math.max(...traversePoints.map(p => p.lon));
+            
+            const padding = 50;
+            const scaleX = (canvas.width - 2 * padding) / (maxLon - minLon || 0.001);
+            const scaleY = (canvas.height - 2 * padding) / (maxLat - minLat || 0.001);
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            traversePoints.forEach((p, i) => {
+                const x = padding + (p.lon - minLon) * scaleX;
+                const y = canvas.height - (padding + (p.lat - minLat) * scaleY);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            traversePoints.forEach((p, i) => {
+                const x = padding + (p.lon - minLon) * scaleX;
+                const y = canvas.height - (padding + (p.lat - minLat) * scaleY);
+                ctx.fillStyle = i === 0 ? '#22c55e' : '#667eea';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            let resultHTML = '<p class="font-bold mb-2">Calculated Points:</p>';
+            traversePoints.forEach((p, i) => {
+                resultHTML += `<p class="text-sm">Point ${i}: ${p.lat.toFixed(6)}°, ${p.lon.toFixed(6)}°</p>`;
+            });
+            
+            document.getElementById('traverseResult').classList.remove('hidden');
+            document.getElementById('traverseResult').innerHTML = resultHTML;
+            showBanner('Traverse calculated!');
+        }
+
+        function plotCoordinates() {
+            const input = document.getElementById('coordInput').value.trim();
+            if (!input) {
+                showBanner('Enter coordinates', 'error');
+                return;
+            }
+
+            const lines = input.split('\n');
+            const coords = [];
+            for (const line of lines) {
+                const parts = line.split(',').map(s => parseFloat(s.trim()));
+                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+                    coords.push({lat: parts[0], lon: parts[1]});
+                }
+            }
+
+            if (coords.length < 3) {
+                showBanner('Need at least 3 valid coordinates', 'error');
+                return;
+            }
+
+            const canvas = document.getElementById('coordCanvas');
+            canvas.classList.remove('hidden');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const minLat = Math.min(...coords.map(p => p.lat));
+            const maxLat = Math.max(...coords.map(p => p.lat));
+            const minLon = Math.min(...coords.map(p => p.lon));
+            const maxLon = Math.max(...coords.map(p => p.lon));
+            
+            const padding = 50;
+            const scaleX = (canvas.width - 2 * padding) / (maxLon - minLon || 0.001);
+            const scaleY = (canvas.height - 2 * padding) / (maxLat - minLat || 0.001);
+            
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            coords.forEach((p, i) => {
+                const x = padding + (p.lon - minLon) * scaleX;
+                const y = canvas.height - (padding + (p.lat - minLat) * scaleY);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.closePath();
+            ctx.stroke();
+            
+            coords.forEach((p, i) => {
+                const x = padding + (p.lon - minLon) * scaleX;
+                const y = canvas.height - (padding + (p.lat - minLat) * scaleY);
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+
+            // Calculate area
+            let area = 0;
+            for (let i = 0; i < coords.length; i++) {
+                const j = (i + 1) % coords.length;
+                area += coords[i].lat * coords[j].lon;
+                area -= coords[j].lat * coords[i].lon;
+            }
+            area = Math.abs(area / 2);
+            const areaM2 = area * 111320 * 111320 * Math.cos(coords[0].lat * Math.PI / 180);
+            const hectares = areaM2 / 10000;
+
+            document.getElementById('coordResult').classList.remove('hidden');
+            document.getElementById('coordResult').innerHTML = `
+                <p class="font-bold mb-2">Boundary Plot:</p>
+                <p class="text-sm"><strong>Points:</strong> ${coords.length}</p>
+                <p class="text-sm"><strong>Area:</strong> ${hectares.toFixed(4)} hectares (${areaM2.toFixed(2)} m²)</p>
+            `;
+            showBanner('Boundary plotted!');
+        }
+
+        // REGULAR TOOLS
+        function convertCoords() {
+            const lat = parseFloat(document.getElementById('lat').value);
+            const lon = parseFloat(document.getElementById('lon').value);
+            if (isNaN(lat) || isNaN(lon)) {
+                showBanner('Enter valid coordinates', 'error');
+                return;
+            }
+            const zone = Math.floor((lon + 180) / 6) + 1;
+            const easting = 500000 + (lon + 180) * 100000;
+            const northing = lat * 111000;
+            document.getElementById('coordResult').classList.remove('hidden');
+            document.getElementById('coordResult').innerHTML = `
+                <p class="font-bold mb-2">UTM Coordinates:</p>
+                <p><strong>Zone:</strong> ${zone}${lat >= 0 ? 'N' : 'S'}</p>
+                <p><strong>Easting:</strong> ${easting.toFixed(2)} m</p>
+                <p><strong>Northing:</strong> ${northing.toFixed(2)} m</p>
+            `;
+            showBanner('Converted!');
+        }
+
+        function convertArea() {
+            const value = parseFloat(document.getElementById('areaVal').value);
+            const from = document.getElementById('fromUnit').value;
+            if (isNaN(value) || value <= 0) {
+                showBanner('Enter valid area', 'error');
+                return;
+            }
+            let sqm;
+            switch(from) {
+                case 'hectares': sqm = value * 10000; break;
+                case 'acres': sqm = value * 4046.86; break;
+                case 'sqm': sqm = value; break;
+                case 'plots': sqm = value * 500; break;
+            }
+            const hectares = sqm / 10000;
+            const acres = sqm / 4046.86;
+            const plots = sqm / 500;
+            document.getElementById('areaResult').classList.remove('hidden');
+            document.getElementById('areaResult').innerHTML = `
+                <p class="font-bold mb-2">Conversions:</p>
+                <p><strong>Hectares:</strong> ${hectares.toFixed(4)} ha</p>
+                <p><strong>Acres:</strong> ${acres.toFixed(4)} ac</p>
+                <p><strong>Sq. Meters:</strong> ${sqm.toFixed(2)} m²</p>
+                <p><strong>Plots:</strong> ${plots.toFixed(2)} plots</p>
+            `;
+            showBanner('Converted!');
+        }
+
+        function calcDistance() {
+            const lat1 = parseFloat(document.getElementById('lat1').value);
+            const lon1 = parseFloat(document.getElementById('lon1').value);
+            const lat2 = parseFloat(document.getElementById('lat2').value);
+            const lon2 = parseFloat(document.getElementById('lon2').value);
+            if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+                showBanner('Enter all coordinates', 'error');
+                return;
+            }
+            const R = 6371000;
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            document.getElementById('distResult').classList.remove('hidden');
+            document.getElementById('distResult').innerHTML = `
+                <p class="font-bold mb-2">Distance:</p>
+                <p><strong>Meters:</strong> ${distance.toFixed(2)} m</p>
+                <p><strong>Kilometers:</strong> ${(distance/1000).toFixed(3)} km</p>
+            `;
+            showBanner('Calculated!');
+        }
+
+        function calcBearing() {
+            const lat1 = parseFloat(document.getElementById('bearLat1').value);
+            const lon1 = parseFloat(document.getElementById('bearLon1').value);
+            const lat2 = parseFloat(document.getElementById('bearLat2').value);
+            const lon2 = parseFloat(document.getElementById('bearLon2').value);
+            if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+                showBanner('Enter all coordinates', 'error');
+                return;
+            }
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const y = Math.sin(Δλ) * Math.cos(φ2);
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            bearing = (bearing + 360) % 360;
+            const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+            const index = Math.round(bearing / 22.5) % 16;
+            const direction = directions[index];
+            document.getElementById('bearResult').classList.remove('hidden');
+            document.getElementById('bearResult').innerHTML = `
+                <p class="font-bold mb-2">Bearing:</p>
+                <p><strong>Azimuth:</strong> ${bearing.toFixed(2)}°</p>
+                <p><strong>Direction:</strong> ${direction}</p>
+            `;
+            showBanner('Calculated!');
+        }
+
+        // C OF O VERIFICATION
+        function verifyCofO() {
+            const fileNum = document.getElementById('cofFile').value.trim();
+            const coords = document.getElementById('cofCoords').value.trim();
+            const registry = document.getElementById('cofRegistry').value.trim();
+
+            if (!fileNum || !coords || !registry) {
+                showBanner('Fill all fields', 'error');
+                return;
+            }
+
+            // Basic fraud checks
+            const warnings = [];
+            
+            // Check file number format
+            if (!/^[A-Z]{2,4}\/\d{2,4}\/\d{2,6}$/.test(fileNum)) {
+                warnings.push('⚠️ File number format suspicious');
+            }
+
+            // Check coordinates
+            const coordParts = coords.split(',').map(s => parseFloat(s.trim()));
+            if (coordParts.length !== 2 || isNaN(coordParts[0]) || isNaN(coordParts[1])) {
+                warnings.push('⚠️ Invalid coordinate format');
+            } else {
+                // Check if coordinates are within Nigeria (rough bounds)
+                if (coordParts[0] < 4 || coordParts[0] > 14 || coordParts[1] < 2.5 || coordParts[1] > 15) {
+                    warnings.push('⚠️ Coordinates outside Nigeria');
+                }
+            }
+
+            // Check registry
+            const validRegistries = ['Lagos', 'Abuja', 'Kano', 'Port Harcourt', 'Ibadan', 'Kaduna'];
+            if (!validRegistries.some(r => registry.toLowerCase().includes(r.toLowerCase()))) {
+                warnings.push('⚠️ Unusual land registry office');
+            }
+
+            const isWarning = warnings.length > 0;
+            const resultClass = isWarning ? 'bg-yellow-50 border-yellow-300' : 'bg-green-50 border-green-300';
+            const textClass = isWarning ? 'text-yellow-900' : 'text-green-900';
+            const icon = isWarning ? '⚠️' : '✓';
+
+            let warningHTML = '';
+            if (warnings.length > 0) {
+                warningHTML = '<div class="mt-4"><p class="font-bold mb-2">Potential Issues:</p><ul class="text-sm space-y-1">';
+                warnings.forEach(w => {
+                    warningHTML += `<li>${w}</li>`;
+                });
+                warningHTML += '</ul></div>';
+            }
+
+            document.getElementById('verifyResult').classList.remove('hidden');
+            document.getElementById('verifyResult').innerHTML = `
+                <div class="${resultClass} border-2 rounded-xl p-6">
+                    <p class="text-2xl font-bold ${textClass} mb-2">${icon} Analysis Complete</p>
+                    <p class="text-sm ${textClass} mb-4">${isWarning ? 'Document requires professional verification' : 'No obvious fraud indicators detected'}</p>
+                    <div class="bg-white p-4 rounded-lg text-sm">
+                        <p><strong>File Number:</strong> ${fileNum}</p>
+                        <p><strong>Coordinates:</strong> ${coords}</p>
+                        <p><strong>Registry:</strong> ${registry}</p>
+                    </div>
+                    ${warningHTML}
+                    <p class="text-xs ${textClass} mt-4">⚠️ This is a preliminary check. For comprehensive verification, contact a professional surveyor.</p>
+                </div>
+            `;
+            showBanner('Analysis complete');
+        }
+
+        function contactForVerification() {
+            const msg = `C of O Verification Request
+
+I need professional verification of a Certificate of Occupancy document.
+
+Please provide:
+- Comprehensive document analysis
+- Land registry verification
+- Coordinate verification
+- Full report
+
+Contact me to discuss details and pricing.`;
+            openWhatsApp(msg);
+            showBanner('Request sent!');
+        }
+
+        // EQUIPMENT
+        const equipment = [
+            {name: 'Total Station', price: 15000, desc: 'High-precision theodolite'},
+            {name: 'Survey Drone', price: 25000, desc: 'Professional mapping drone'},
+            {name: 'GNSS Receiver', price: 20000, desc: 'RTK GPS receiver'},
+            {name: 'Laser Scanner', price: 30000, desc: '3D laser scanner'}
+        ];
+
+        function initEquipment() {
+            const html = equipment.map(item => `
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-bold text-lg mb-2">${item.name}</h3>
+                    <p class="text-sm text-gray-600 mb-3">${item.desc}</p>
+                    <p class="text-xl font-bold text-green-600 mb-3">₦${item.price.toLocaleString()}/day</p>
+                    <button onclick="bookEquipment('${item.name}', ${item.price})" class="w-full bg-purple-600 text-white px-4 py-3 rounded-lg font-bold">📅 Book Now</button>
+                </div>
+            `).join('');
+            document.getElementById('equipmentList').innerHTML = html;
+        }
+
+        function bookEquipment(name, price) {
+            const info = prompt(`Book ${name} (₦${price.toLocaleString()}/day)\n\nEnter: Name | Phone | Date | Days\nExample: John Doe | 08012345678 | 2026-03-01 | 3`);
+            if (!info) return;
+            const [userName, phone, date, days] = info.split('|').map(s => s.trim());
+            if (!userName || !phone || !date || !days) {
+                showBanner('Provide all info', 'error');
+                return;
+            }
+            const total = price * parseInt(days);
+            const msg = `Equipment Booking Request:
+
+Equipment: ${name}
+Price: ₦${price.toLocaleString()}/day
+Days: ${days}
+Total: ₦${total.toLocaleString()}
+
+Customer: ${userName}
+Phone: ${phone}
+Date: ${date}
+
+Payment: Opay ${CFG.opay}
+Please confirm availability.`;
+            openWhatsApp(msg);
+            showBanner('Booking request sent!');
+        }
+
+        // TRAINING
+        const courses = [
+            {name: 'Advanced GIS Mapping', price: 25000, duration: '12 hours'},
+            {name: 'Drone Surveying', price: 45000, duration: '16 hours'},
+            {name: 'AI in Surveying', price: 35000, duration: '10 hours'},
+            {name: 'RTK/GNSS Fundamentals', price: 20000, duration: '8 hours'},
+            {name: 'C of O Verification', price: 15000, duration: '6 hours'},
+            {name: 'AutoCAD for Surveyors', price: 30000, duration: '14 hours'}
+        ];
+
+        function initTraining() {
+            const html = courses.map(c => `
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="font-bold text-lg mb-2">${c.name}</h3>
+                    <p class="text-sm text-gray-600 mb-3">${c.duration}</p>
+                    <p class="text-xl font-bold text-green-600 mb-3">₦${c.price.toLocaleString()}</p>
+                    <button onclick="enrollCourse('${c.name}', ${c.price})" class="w-full bg-green-600 text-white px-4 py-3 rounded-lg font-bold">💳 Enroll Now</button>
+                </div>
+            `).join('');
+            document.getElementById('trainingList').innerHTML = html;
+        }
+
+        function enrollCourse(name, price) {
+            const msg = `Training Enrollment Request:
+
+Course: ${name}
+Price: ₦${price.toLocaleString()}
+
+Payment Details:
+Bank: Opay
+Account: ${CFG.opay}
+Name: Surveypro
+
+Please send payment proof and your email for course access.`;
+            openWhatsApp(msg);
+            showBanner('Enrollment request sent!');
+        }
+
+        // SERVICES
+        function requestQuote(service) {
+            const msg = `Service Quote Request:
+
+Service: ${service}
+
+Please provide:
+- Project location
+- Area/scope
+- Timeline
+- Special requirements
+
+I would like a detailed quote.`;
+            openWhatsApp(msg);
+            showBanner('Quote request sent!');
+        }
+
+        // INIT
+        function toggleDark() {
+            document.body.classList.toggle('bg-gray-900');
+            document.body.classList.toggle('text-white');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initEquipment();
+            initTraining();
+            console.log('✓ Surveypro COMPLETE Commercial Platform');
+            console.log('Phone:', CFG.phone);
+            console.log('Email:', CFG.email);
+            console.log('Opay:', CFG.opay);
+        });
+    </script>
+</body>
+</html>
