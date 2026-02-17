@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SurveyPro Elite | Nigeria's #1 Professional Surveying Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #f1f5f9; min-height: 100vh; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .gradient-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+        .gradient-orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .hidden { display: none !important; }
+        .tab-active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white !important; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 20px 40px rgba(0,0,0,0.12); }
+        canvas { border: 2px solid #667eea; border-radius: 10px; background: #fff; cursor: crosshair; }
+        .payment-split { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 28px; border-radius: 16px; margin: 20px 0; }
+        .split-item { display: flex; justify-content: space-between; align-items: center; padding: 18px; background: rgba(255,255,255,0.18); border-radius: 10px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.25); }
+        .split-pct { font-size: 2em; font-weight: 900; }
+        .equipment-card { border: 2px solid #e5e7eb; border-radius: 14px; padding: 24px; margin-bottom: 18px; background: white; transition: all 0.3s; }
+        .equipment-card:hover { border-color: #7c3aed; box-shadow: 0 8px 24px rgba(124,58,237,0.15); transform: translateY(-4px); }
+        .price-big { font-size: 2.4em; font-weight: 900; color: #10b981; margin: 10px 0; }
+        .earn-badge { display: inline-block; background: #ecfdf5; border: 2px solid #10b981; color: #065f46; padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.88em; margin-top: 6px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: white; border-radius: 20px; padding: 36px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 18px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: none; z-index: 2000; max-width: 360px; font-weight: 600; }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(400px); } to { transform: translateX(0); } }
+        .success-banner { position: fixed; top: 0; left: 0; right: 0; z-index: 999; animation: bannerDown 0.4s ease; }
+        @keyframes bannerDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        .gps-dot { width: 12px; height: 12px; background: #10b981; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .gps-dot.inactive { background: #ef4444; }
+        .stat-card { text-align: center; padding: 20px; border-radius: 12px; }
+        select, input, textarea { font-family: 'Inter', sans-serif; }
+        .course-card { border: 2px solid #e5e7eb; border-radius: 12px; padding: 20px; margin-bottom: 14px; background: white; transition: all 0.3s; }
+        .course-card:hover { border-color: #7c3aed; box-shadow: 0 4px 16px rgba(124,58,237,0.12); }
+        @media (max-width: 640px) { .price-big { font-size: 1.8em; } .modal-box { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+<!-- Success Banner -->
+<div id="banner" class="hidden success-banner">
+    <div id="bannerContent" class="gradient-bg text-white px-4 py-3 flex justify-between items-center">
+        <span id="bannerMsg" class="font-semibold"></span>
+        <button onclick="closeBanner()" class="ml-4 text-white/80 hover:text-white text-xl">✕</button>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"><span id="toastMsg"></span></div>
+
+<!-- Payment Modal -->
+<div id="modal" class="modal-overlay">
+    <div class="modal-box" id="modalContent"></div>
+</div>
+
+<!-- HEADER -->
+<header class="gradient-bg text-white shadow-xl sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="flex justify-between items-center flex-wrap gap-3">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black">🎯 SurveyPro Elite</h1>
+                <p class="text-xs opacity-90">Nigeria's #1 Professional Surveying Platform | WGS84 | UTM 31-33N | NNO</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="gpsStatus" class="flex items-center text-sm bg-white/20 px-3 py-1 rounded-lg">
+                    <span class="gps-dot inactive" id="gpsDot"></span>
+                    <span id="gpsLabel">GPS Off</span>
+                </div>
+                <select id="langSelect" onchange="setLang(this.value)" class="bg-white/20 text-white px-3 py-1 rounded-lg text-sm border-0 cursor-pointer">
+                    <option value="en">English</option>
+                    <option value="ha">Hausa</option>
+                    <option value="yo">Yoruba</option>
+                    <option value="ig">Igbo</option>
+                </select>
+                <button onclick="toggleDark()" class="bg-white/20 px-3 py-2 rounded-lg text-sm hover:bg-white/30">🌙</button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- NAVIGATION -->
+<div class="max-w-7xl mx-auto px-4 py-3">
+    <div class="bg-white rounded-xl shadow-lg p-2 flex overflow-x-auto gap-1">
+        <button onclick="showTab('survey')" id="tab-survey" class="tab-active px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm">📊 Survey</button>
+        <button onclick="showTab('coords')" id="tab-coords" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">🌍 Coordinates</button>
+        <button onclick="showTab('plot')" id="tab-plot" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">📐 Plot Layout</button>
+        <button onclick="showTab('gis')" id="tab-gis" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">🗺️ GIS Tools</button>
+        <button onclick="showTab('verify')" id="tab-verify" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">🔒 C of O</button>
+        <button onclick="showTab('equipment')" id="tab-equipment" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">🎯 Equipment</button>
+        <button onclick="showTab('training')" id="tab-training" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">🎓 Training</button>
+        <button onclick="showTab('history')" id="tab-history" class="px-4 py-2.5 rounded-lg font-bold whitespace-nowrap text-sm hover:bg-gray-100">📁 History</button>
+    </div>
+</div>
+
+<main class="max-w-7xl mx-auto px-4 pb-24">
+
+<!-- ═══════════════════════════════════ SURVEY TAB ═══════════════════════════════════ -->
+<div id="content-survey" class="tab-content fade-in">
+    <!-- GPS Panel -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5 card-hover">
+        <h2 class="text-xl font-bold mb-4">📡 GPS & Location</h2>
+        <div id="gpsInfoBox" class="p-4 bg-gray-50 rounded-lg mb-4 text-sm">
+            <p class="text-gray-600">Click Enable GPS to start live positioning for your survey.</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <button onclick="enableGPS()" class="gradient-bg text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg transition">📡 Enable GPS</button>
+            <button onclick="stopGPS()" class="bg-red-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-red-700 transition">⛔ Stop GPS</button>
+        </div>
+    </div>
+
+    <!-- Client Info -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5 card-hover">
+        <h2 class="text-xl font-bold mb-4">👤 Client & Project Details</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label class="text-sm font-bold block mb-1">Client Name *</label>
+                <input id="clientName" type="text" placeholder="Full name" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">Phone *</label>
+                <input id="clientPhone" type="tel" placeholder="080XXXXXXXX" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">Email</label>
+                <input id="clientEmail" type="email" placeholder="email@example.com" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">Project Name *</label>
+                <input id="projectName" type="text" placeholder="Project name" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">Location *</label>
+                <input id="location" type="text" placeholder="Survey location" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">File Number</label>
+                <input id="fileNumber" type="text" placeholder="e.g. LD/123/2026" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none"></div>
+            <div><label class="text-sm font-bold block mb-1">Survey Type</label>
+                <select id="surveyType" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none">
+                    <option>Boundary Survey</option><option>Topographic Survey</option>
+                    <option>Cadastral Survey</option><option>Engineering Survey</option>
+                    <option>Construction Survey</option><option>Hydrographic Survey</option>
+                </select></div>
+            <div><label class="text-sm font-bold block mb-1">Coordinate System</label>
+                <select id="coordSys" class="w-full px-4 py-3 border-2 rounded-lg focus:border-purple-500 outline-none">
+                    <option>WGS 84 / UTM Zone 31N</option><option>WGS 84 / UTM Zone 32N</option>
+                    <option>WGS 84 / UTM Zone 33N</option><option>Minna / UTM Zone 31N (NNO)</option>
+                </select></div>
+        </div>
+    </div>
+
+    <!-- Survey Controls -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5 card-hover">
+        <h2 class="text-xl font-bold mb-4">📍 Survey Controls</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <button onclick="addGPSPoint()" class="gradient-green text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg">➕ Add GPS Point</button>
+            <button onclick="addManualPoint()" class="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700">✏️ Manual Point</button>
+            <button onclick="undoPoint()" class="bg-yellow-500 text-white px-4 py-3 rounded-lg font-bold hover:bg-yellow-600">↩️ Undo</button>
+            <button onclick="clearSurvey()" class="bg-red-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-red-700">🗑️ Clear</button>
+        </div>
+
+        <!-- Manual Point Input -->
+        <div id="manualInput" class="hidden p-4 bg-purple-50 rounded-lg mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                <div><label class="text-sm font-bold block mb-1">Northing (m)</label>
+                    <input id="manualN" type="number" step="0.001" placeholder="857881.968" class="w-full px-3 py-2 border-2 rounded-lg font-mono text-sm"></div>
+                <div><label class="text-sm font-bold block mb-1">Easting (m)</label>
+                    <input id="manualE" type="number" step="0.001" placeholder="707032.831" class="w-full px-3 py-2 border-2 rounded-lg font-mono text-sm"></div>
+                <div><label class="text-sm font-bold block mb-1">Elevation (m)</label>
+                    <input id="manualElev" type="number" step="0.001" placeholder="0.000" class="w-full px-3 py-2 border-2 rounded-lg font-mono text-sm"></div>
+            </div>
+            <button onclick="confirmManualPoint()" class="w-full gradient-bg text-white px-4 py-2.5 rounded-lg font-bold">✅ Confirm Point</button>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+            <div class="stat-card gradient-bg text-white rounded-xl">
+                <div class="text-3xl font-black" id="ptCount">0</div><div class="text-xs mt-1">Points</div></div>
+            <div class="stat-card gradient-green text-white rounded-xl">
+                <div class="text-2xl font-black" id="areaHa">0.0000</div><div class="text-xs mt-1">Hectares</div></div>
+            <div class="stat-card gradient-orange text-white rounded-xl">
+                <div class="text-2xl font-black" id="areaAc">0.0000</div><div class="text-xs mt-1">Acres</div></div>
+            <div class="stat-card bg-blue-600 text-white rounded-xl">
+                <div class="text-2xl font-black" id="perim">0</div><div class="text-xs mt-1">Perim (m)</div></div>
+            <div class="stat-card bg-gray-700 text-white rounded-xl">
+                <div class="text-2xl font-black" id="plotsCount">0.0</div><div class="text-xs mt-1">Plots (50×100)</div></div>
+        </div>
+
+        <!-- Points Table -->
+        <div id="pointsTable" class="overflow-x-auto mb-4 text-sm"></div>
+
+        <!-- Actions -->
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <button onclick="completeSurvey()" class="gradient-bg text-white px-4 py-3 rounded-lg font-bold hover:shadow-lg col-span-2 md:col-span-1">✅ Complete Survey</button>
+            <button onclick="emailSurvey()" class="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-blue-700">📧 Email Report</button>
+            <button onclick="whatsappSurvey()" class="bg-green-600 text-white px-4 py-3 rounded-lg font-bold hover:bg-green-700">📱 WhatsApp</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ COORDINATES TAB ═══════════════════════════════════ -->
+<div id="content-coords" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5">
+        <h2 class="text-xl font-bold mb-4">🌍 Coordinate Conversion Tools</h2>
+        <div class="flex gap-2 mb-6 flex-wrap">
+            <button onclick="showCoord('latutm')" id="ctab-latutm" class="flex-1 min-w-[140px] bg-blue-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm">Lat/Lon ↔ UTM</button>
+            <button onclick="showCoord('bearing')" id="ctab-bearing" class="flex-1 min-w-[140px] bg-gray-200 px-4 py-2.5 rounded-lg font-bold text-sm">Bearing & Distance</button>
+            <button onclick="showCoord('multiformat')" id="ctab-multiformat" class="flex-1 min-w-[140px] bg-gray-200 px-4 py-2.5 rounded-lg font-bold text-sm">Multi-Format</button>
+            <button onclick="showCoord('traverse')" id="ctab-traverse" class="flex-1 min-w-[140px] bg-gray-200 px-4 py-2.5 rounded-lg font-bold text-sm">Traverse Calc</button>
+        </div>
+
+        <!-- Lat/Lon UTM -->
+        <div id="coord-latutm" class="coord-pane">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-5 bg-blue-50 rounded-xl">
+                    <h4 class="font-bold mb-3">📐 Lat/Lon → UTM</h4>
+                    <div class="space-y-3">
+                        <div><label class="text-xs font-bold">Latitude (°N)</label>
+                            <input id="ll-lat" type="number" step="0.0000001" placeholder="7.75771146" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                        <div><label class="text-xs font-bold">Longitude (°E)</label>
+                            <input id="ll-lon" type="number" step="0.0000001" placeholder="4.53887695" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                        <button onclick="convLatToUTM()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold">Convert →</button>
+                        <div id="res-lltoutm" class="hidden p-3 bg-white border-2 border-blue-300 rounded-lg font-mono text-sm"></div>
+                    </div>
+                </div>
+                <div class="p-5 bg-green-50 rounded-xl">
+                    <h4 class="font-bold mb-3">📍 UTM → Lat/Lon</h4>
+                    <div class="space-y-3">
+                        <div><label class="text-xs font-bold">Zone</label>
+                            <input id="utm-zone" type="number" min="1" max="60" placeholder="31" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                        <div><label class="text-xs font-bold">Easting (m)</label>
+                            <input id="utm-e" type="number" step="0.001" placeholder="707032.831" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                        <div><label class="text-xs font-bold">Northing (m)</label>
+                            <input id="utm-n" type="number" step="0.001" placeholder="857881.968" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                        <button onclick="convUTMToLat()" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold">Convert →</button>
+                        <div id="res-utmtoll" class="hidden p-3 bg-white border-2 border-green-300 rounded-lg font-mono text-sm"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bearing & Distance -->
+        <div id="coord-bearing" class="coord-pane hidden">
+            <div class="p-5 bg-purple-50 rounded-xl">
+                <h4 class="font-bold mb-3">🧭 Calculate Point from Bearing & Distance</h4>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div><label class="text-xs font-bold">Start Northing (m)</label>
+                        <input id="bd-n" type="number" step="0.001" placeholder="857881.968" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                    <div><label class="text-xs font-bold">Start Easting (m)</label>
+                        <input id="bd-e" type="number" step="0.001" placeholder="707032.831" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                    <div><label class="text-xs font-bold">Bearing (0–360°)</label>
+                        <input id="bd-bearing" type="number" step="0.0001" min="0" max="360" placeholder="45.0000" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                    <div><label class="text-xs font-bold">Distance (m)</label>
+                        <input id="bd-dist" type="number" step="0.001" placeholder="100.000" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mt-1"></div>
+                </div>
+                <button onclick="calcBearingDist()" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-bold mb-3">Calculate Point</button>
+                <div id="bd-result" class="hidden p-4 bg-white border-2 border-purple-300 rounded-lg"></div>
+            </div>
+        </div>
+
+        <!-- Multi Format -->
+        <div id="coord-multiformat" class="coord-pane hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="p-5 bg-orange-50 rounded-xl">
+                    <h4 class="font-bold mb-3">Input</h4>
+                    <select id="mf-format" class="w-full px-3 py-2.5 border-2 rounded-lg mb-3">
+                        <option value="dd">Decimal Degrees (DD)</option>
+                        <option value="dms">Degrees Minutes Seconds</option>
+                    </select>
+                    <input id="mf-lat" placeholder="Latitude" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mb-2">
+                    <input id="mf-lon" placeholder="Longitude" class="w-full px-3 py-2.5 border-2 rounded-lg font-mono mb-3">
+                    <button onclick="convertMultiFormat()" class="w-full bg-orange-600 text-white py-2.5 rounded-lg font-bold">Convert All Formats</button>
+                </div>
+                <div class="p-5 bg-gray-50 rounded-xl">
+                    <h4 class="font-bold mb-3">All Output Formats</h4>
+                    <div id="mf-results" class="space-y-2 text-sm font-mono"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Traverse -->
+        <div id="coord-traverse" class="coord-pane hidden">
+            <div class="p-5 bg-teal-50 rounded-xl">
+                <h4 class="font-bold mb-3">📏 Traverse Computation</h4>
+                <p class="text-sm text-gray-600 mb-4">Enter traverse legs. System will compute coordinates, closure error and adjusted coordinates.</p>
+                <div class="grid grid-cols-3 gap-3 mb-3">
+                    <div><label class="text-xs font-bold">Start Northing</label>
+                        <input id="trav-n0" type="number" step="0.001" placeholder="1000.000" class="w-full px-3 py-2 border-2 rounded-lg font-mono mt-1 text-sm"></div>
+                    <div><label class="text-xs font-bold">Start Easting</label>
+                        <input id="trav-e0" type="number" step="0.001" placeholder="1000.000" class="w-full px-3 py-2 border-2 rounded-lg font-mono mt-1 text-sm"></div>
+                    <div class="flex items-end">
+                        <button onclick="addTravLeg()" class="w-full bg-teal-600 text-white py-2 rounded-lg font-bold text-sm">+ Add Leg</button>
+                    </div>
+                </div>
+                <div id="trav-legs" class="mb-3 space-y-2"></div>
+                <button onclick="computeTraverse()" class="w-full bg-teal-700 text-white py-2.5 rounded-lg font-bold mb-3">Compute Traverse</button>
+                <div id="trav-result" class="hidden text-sm font-mono p-4 bg-white border-2 border-teal-300 rounded-lg overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ PLOT LAYOUT TAB ═══════════════════════════════════ -->
+<div id="content-plot" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5">
+        <h2 class="text-xl font-bold mb-4">📐 Professional Survey Plot Layout</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label class="text-sm font-bold block mb-1">Plot Owner / Title Holder</label>
+                <input id="plotOwner" type="text" placeholder="Full name" class="w-full px-4 py-3 border-2 rounded-lg"></div>
+            <div><label class="text-sm font-bold block mb-1">Plot Address</label>
+                <input id="plotAddress" type="text" placeholder="Plot address / description" class="w-full px-4 py-3 border-2 rounded-lg"></div>
+            <div><label class="text-sm font-bold block mb-1">Start Latitude</label>
+                <input id="plotLat" type="number" step="0.0000001" placeholder="7.75771146" class="w-full px-4 py-3 border-2 rounded-lg font-mono"></div>
+            <div><label class="text-sm font-bold block mb-1">Start Longitude</label>
+                <input id="plotLon" type="number" step="0.0000001" placeholder="4.53887695" class="w-full px-4 py-3 border-2 rounded-lg font-mono"></div>
+            <div><label class="text-sm font-bold block mb-1">Plot Width (m)</label>
+                <input id="plotWidth" type="number" value="15" class="w-full px-4 py-3 border-2 rounded-lg"></div>
+            <div><label class="text-sm font-bold block mb-1">Plot Depth (m)</label>
+                <input id="plotDepth" type="number" value="30" class="w-full px-4 py-3 border-2 rounded-lg"></div>
+        </div>
+        <div class="flex gap-3 mb-4 flex-wrap">
+            <button onclick="generatePlot()" class="flex-1 gradient-bg text-white px-4 py-3 rounded-lg font-bold">📐 Generate Layout</button>
+            <button onclick="clearPlotCanvas()" class="bg-gray-600 text-white px-4 py-3 rounded-lg font-bold">🗑️ Clear</button>
+            <button onclick="exportPlot()" class="bg-blue-600 text-white px-4 py-3 rounded-lg font-bold">💾 Export PNG</button>
+            <button onclick="calcCanvasArea()" class="bg-green-600 text-white px-4 py-3 rounded-lg font-bold">📊 Area</button>
+        </div>
+        <canvas id="plotCanvas" width="900" height="600" class="w-full mb-4"></canvas>
+        <div id="plotAreaResult" class="hidden p-4 bg-green-50 border-2 border-green-300 rounded-xl text-sm"></div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ GIS TOOLS TAB ═══════════════════════════════════ -->
+<div id="content-gis" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5">
+        <h2 class="text-xl font-bold mb-2">🗺️ GIS & Remote Sensing Tools</h2>
+        <p class="text-gray-600 text-sm mb-6">Professional geoinformatics services powered by SurveyPro Elite</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="p-5 bg-blue-50 rounded-xl card-hover border-2 border-transparent hover:border-blue-300">
+                <h4 class="font-bold text-lg mb-2">🛰️ Satellite Data Access</h4>
+                <p class="text-sm text-gray-600 mb-4">Access multispectral imagery, NDVI analysis, and land cover classification for your project area.</p>
+                <button onclick="requestGIS('Satellite Data Access')" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+            <div class="p-5 bg-green-50 rounded-xl card-hover border-2 border-transparent hover:border-green-300">
+                <h4 class="font-bold text-lg mb-2">🌾 Agricultural Monitoring</h4>
+                <p class="text-sm text-gray-600 mb-4">Crop health analysis, yield prediction, irrigation optimization, and precision farming support.</p>
+                <button onclick="requestGIS('Agricultural Monitoring')" class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+            <div class="p-5 bg-purple-50 rounded-xl card-hover border-2 border-transparent hover:border-purple-300">
+                <h4 class="font-bold text-lg mb-2">🏙️ Urban Planning GIS</h4>
+                <p class="text-sm text-gray-600 mb-4">Land use mapping, infrastructure planning, zoning analysis, and urban growth modeling.</p>
+                <button onclick="requestGIS('Urban Planning GIS')" class="w-full bg-purple-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+            <div class="p-5 bg-cyan-50 rounded-xl card-hover border-2 border-transparent hover:border-cyan-300">
+                <h4 class="font-bold text-lg mb-2">🌊 Flood Risk Assessment</h4>
+                <p class="text-sm text-gray-600 mb-4">Hydrological modeling, drainage analysis, DEM extraction, and flood risk mapping.</p>
+                <button onclick="requestGIS('Flood Risk Assessment')" class="w-full bg-cyan-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+            <div class="p-5 bg-orange-50 rounded-xl card-hover border-2 border-transparent hover:border-orange-300">
+                <h4 class="font-bold text-lg mb-2">🗂️ Cadastral Mapping</h4>
+                <p class="text-sm text-gray-600 mb-4">Property boundary delineation, title surveys, land registry integration, and GIS database.</p>
+                <button onclick="requestGIS('Cadastral Mapping')" class="w-full bg-orange-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+            <div class="p-5 bg-rose-50 rounded-xl card-hover border-2 border-transparent hover:border-rose-300">
+                <h4 class="font-bold text-lg mb-2">🌿 Environmental Impact</h4>
+                <p class="text-sm text-gray-600 mb-4">EIA studies, deforestation monitoring, biodiversity mapping, and conservation planning.</p>
+                <button onclick="requestGIS('Environmental Impact Assessment')" class="w-full bg-rose-600 text-white py-2.5 rounded-lg font-bold">Request Service</button>
+            </div>
+        </div>
+        <div class="mt-6 p-4 bg-gray-800 text-white rounded-xl text-center">
+            <p class="font-bold">📞 Contact: +234-811-755-4948</p>
+            <p class="text-sm mt-1 opacity-80">📧 opusarnold@gmail.com | 💬 WhatsApp same number</p>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ C of O VERIFY TAB ═══════════════════════════════════ -->
+<div id="content-verify" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-5">
+        <h2 class="text-xl font-bold mb-4">🔒 C of O Verification System</h2>
+        <div class="p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-lg mb-5 text-sm">
+            <strong>Notice:</strong> This verifies SurveyPro-generated survey codes. For official govt C of O, contact your state land registry.
+        </div>
+        <div class="mb-4">
+            <label class="font-bold block mb-2">Enter Verification Code</label>
+            <input id="verifyInput" type="text" placeholder="e.g. NGS-MLP6LZZD" class="w-full px-4 py-3 border-2 rounded-lg font-mono text-lg uppercase">
+        </div>
+        <button onclick="verifySurveyCode()" class="w-full gradient-bg text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg mb-5">🔍 Verify Code</button>
+        <div id="verifyResult"></div>
+
+        <div class="mt-6 p-5 bg-blue-50 rounded-xl">
+            <h4 class="font-bold mb-2">📋 Request Professional C of O Service</h4>
+            <p class="text-sm text-gray-600 mb-3">Need help with official Certificate of Occupancy documentation?</p>
+            <button onclick="requestCofO()" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-bold">📱 Contact via WhatsApp</button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ EQUIPMENT TAB ═══════════════════════════════════ -->
+<div id="content-equipment" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-2xl font-black text-center mb-2">🎯 Professional Equipment Rental</h2>
+        <p class="text-center text-gray-500 text-sm mb-5">Nigeria's premier survey equipment marketplace</p>
+
+        <div class="payment-split">
+            <h4 class="text-xl font-black mb-4 text-center">💰 Revenue Sharing — Scale 1 to 10</h4>
+            <div class="split-item">
+                <div>
+                    <div class="text-sm opacity-90">Platform Commission (You — Arnold)</div>
+                    <div class="text-sm mt-1">Opay: <strong>8117554948</strong> | Instant transfer</div>
+                </div>
+                <div class="split-pct">4.5/10</div>
+            </div>
+            <div class="split-item">
+                <div>
+                    <div class="text-sm opacity-90">Equipment Rental Partner (Licensed Provider)</div>
+                    <div class="text-sm mt-1">55% routed to equipment company</div>
+                </div>
+                <div class="split-pct">5.5/10</div>
+            </div>
+            <p class="text-xs mt-4 text-center opacity-90 border-t border-white/20 pt-4">
+                💳 Customer pays full price → 45% credited to Opay 8117554948 → 55% to partner
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">🎯</span>
+                    <div><h4 class="text-xl font-black text-purple-600">Total Station</h4>
+                    <p class="text-xs text-gray-500">Leica TS16 / TS06</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">High-precision 2" electronic theodolite with integrated EDM, Bluetooth and onboard memory.</p>
+                <div class="price-big">₦20,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦9,000 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ 2" angular accuracy</li><li>✅ 3km EDM range</li><li>✅ Bluetooth data transfer</li><li>✅ Includes tripod & prism</li></ul>
+                <button onclick="bookEquipment('Total Station (Leica TS16)',20000,'https://www.nationalequipment.com/total-stations')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦9,000</button>
+            </div>
+
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">📡</span>
+                    <div><h4 class="text-xl font-black text-purple-600">RTK GNSS Receiver</h4>
+                    <p class="text-xs text-gray-500">Trimble R10 / R12i</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">Multi-constellation RTK GNSS with centimetre accuracy and integrated UHF modem.</p>
+                <div class="price-big">₦20,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦9,000 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ 8mm RTK accuracy</li><li>✅ All-constellation GNSS</li><li>✅ UHF radio integrated</li><li>✅ Cloud sync</li></ul>
+                <button onclick="bookEquipment('RTK GNSS Receiver (Trimble)',20000,'https://www.sunbeltrentals.com/surveying')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦9,000</button>
+            </div>
+
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">🚁</span>
+                    <div><h4 class="text-xl font-black text-purple-600">Survey Drone</h4>
+                    <p class="text-xs text-gray-500">DJI Phantom 4 RTK</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">Professional aerial mapping drone with RTK, 20MP Hasselblad camera, and photogrammetry suite.</p>
+                <div class="price-big">₦25,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦11,250 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ RTK cm-level accuracy</li><li>✅ 20MP sensor</li><li>✅ Includes Pix4D software</li><li>✅ 45-min flight time</li></ul>
+                <button onclick="bookEquipment('Survey Drone (DJI Phantom 4 RTK)',25000,'https://www.dronebase.com/equipment')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦11,250</button>
+            </div>
+
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">📏</span>
+                    <div><h4 class="text-xl font-black text-purple-600">Digital Level</h4>
+                    <p class="text-xs text-gray-500">Leica DNA03</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">High-precision digital auto-level for precise elevation and height difference measurements.</p>
+                <div class="price-big">₦8,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦3,600 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ 0.3mm/km accuracy</li><li>✅ Auto reading</li><li>✅ 2000-point memory</li><li>✅ With invar staff</li></ul>
+                <button onclick="bookEquipment('Digital Level (Leica DNA03)',8000,'https://www.unitedrentals.com/survey')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦3,600</button>
+            </div>
+
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">⚡</span>
+                    <div><h4 class="text-xl font-black text-purple-600">3D Laser Scanner</h4>
+                    <p class="text-xs text-gray-500">Leica RTC360</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">Ultra-fast 3D reality capture scanner for BIM, heritage, and infrastructure documentation.</p>
+                <div class="price-big">₦30,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦13,500 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ 2M pts/sec scan speed</li><li>✅ 360° capture</li><li>✅ HDR panoramic images</li><li>✅ Auto registration</li></ul>
+                <button onclick="bookEquipment('3D Laser Scanner (Leica RTC360)',30000,'https://www.laserscanning.com/rentals')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦13,500</button>
+            </div>
+
+            <div class="equipment-card">
+                <div class="flex gap-3 mb-3"><span class="text-4xl">🔭</span>
+                    <div><h4 class="text-xl font-black text-purple-600">Electronic Theodolite</h4>
+                    <p class="text-xs text-gray-500">Topcon DT-209</p></div></div>
+                <p class="text-gray-700 text-sm mb-2">Professional 9" electronic theodolite with dual-axis compensation and digital readout.</p>
+                <div class="price-big">₦6,000 <span class="text-sm font-normal text-gray-500">/day</span></div>
+                <div class="earn-badge">✅ You earn: ₦2,700 (45%)</div>
+                <ul class="text-sm text-gray-600 my-3 space-y-1"><li>✅ 9" angular accuracy</li><li>✅ Dual-axis compensation</li><li>✅ Digital display</li><li>✅ Waterproof IP54</li></ul>
+                <button onclick="bookEquipment('Electronic Theodolite (Topcon DT-209)',6000,'https://www.tigersupplies.com/theodolites')" class="w-full gradient-green text-white py-3 rounded-xl font-bold text-lg hover:shadow-lg mt-2">🛒 Book Now — Earn ₦2,700</button>
+            </div>
+        </div>
+
+        <div class="mt-6 p-5 bg-blue-50 rounded-xl border-2 border-blue-200 text-sm">
+            <h4 class="font-bold mb-2">💳 Payment Details (Your Account)</h4>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="p-3 bg-white rounded-lg"><div class="font-bold">Opay Wallet</div><div class="font-mono text-purple-700 text-lg">8117554948</div><div class="text-xs text-gray-500">Name: Arnold</div></div>
+                <div class="p-3 bg-white rounded-lg"><div class="font-bold">Email</div><div class="text-purple-700">opusarnold@gmail.com</div></div>
+                <div class="p-3 bg-white rounded-lg"><div class="font-bold">WhatsApp</div><div class="text-purple-700">+234-811-755-4948</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ TRAINING TAB ═══════════════════════════════════ -->
+<div id="content-training" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h2 class="text-2xl font-black text-center mb-2">🎓 Professional Training Hub</h2>
+        <p class="text-center text-gray-500 text-sm mb-5">Advance your surveying career with industry-certified courses</p>
+
+        <div class="payment-split mb-5">
+            <h4 class="text-xl font-black mb-4 text-center">💡 Training Revenue Share</h4>
+            <div class="split-item">
+                <div><div class="text-sm opacity-90">Platform Owner (Arnold) — Opay 8117554948</div></div>
+                <div class="split-pct">4.5/10</div>
+            </div>
+            <div class="split-item">
+                <div><div class="text-sm opacity-90">Course / Education Provider</div></div>
+                <div class="split-pct">5.5/10</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5" id="coursesGrid">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════ HISTORY TAB ═══════════════════════════════════ -->
+<div id="content-history" class="tab-content hidden fade-in">
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-xl font-bold">📁 Survey History</h2>
+            <button onclick="clearAllHistory()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-700">🗑️ Clear All</button>
+        </div>
+        <div id="historyContent">
+            <div class="text-center py-12 text-gray-400">
+                <p class="text-5xl mb-3">📂</p>
+                <p class="text-lg font-semibold">No saved surveys yet</p>
+                <p class="text-sm mt-1">Complete and save surveys to see them here</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+</main>
+
+<!-- Footer -->
+<footer class="gradient-bg text-white mt-10 py-8">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+        <p class="text-xl font-black">🎯 SurveyPro Elite</p>
+        <p class="text-sm opacity-80 mt-1">Nigeria's #1 Professional Surveying & Equipment Rental Platform</p>
+        <p class="text-sm mt-3 opacity-90">📞 +234-811-755-4948 | 📧 opusarnold@gmail.com | 💳 Opay: 8117554948</p>
+        <p class="text-xs opacity-60 mt-3">© 2026 SurveyPro Elite — 45% Commission | Commercial Licensed | WGS84 | UTM 31-33N</p>
+    </div>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIGURATION — YOUR REAL DETAILS
+// ══════════════════════════════════════════════════════════════════
+const CFG = {
+    paystackKey: 'pk_test_eccaa497055c149e45a6f21500a322cb584ec9eb',
+    phone: '2348117554948',
+    opay: '8117554948',
+    email: 'opusarnold@gmail.com',
+    name: 'Arnold',
+    business: 'SurveyPro Elite',
+    whatsapp: 'https://wa.me/2348117554948'
+};
+
+// ══════════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════════
+let gpsPos = null, watchId = null;
+let surveyPts = [];
+let surveys = [];
+let plotPts = [];
+let travLegs = [];
+let darkMode = false;
+
+const COURSES = [
+    { id:'gis', name:'Advanced GIS Mapping', price:25000, dur:'12 hrs', level:'Beginner', desc:'Master QGIS and ArcGIS for professional surveying workflows', platform:'QGIS Academy' },
+    { id:'drone', name:'Drone Surveying & Photogrammetry', price:45000, dur:'16 hrs', level:'Intermediate', desc:'Aerial mapping, LiDAR techniques, and 3D point cloud processing', platform:'Pix4D Academy' },
+    { id:'ai', name:'AI in Land Surveying', price:35000, dur:'10 hrs', level:'Advanced', desc:'Machine learning for automated feature extraction and classification', platform:'Coursera' },
+    { id:'rtk', name:'RTK/GNSS Fundamentals', price:20000, dur:'8 hrs', level:'Beginner', desc:'High-precision GPS techniques for cadastral and engineering surveys', platform:'Trimble Academy' },
+    { id:'autocad', name:'AutoCAD Civil 3D for Surveyors', price:30000, dur:'14 hrs', level:'Intermediate', desc:'Drawing, annotation, surface modelling and survey deliverables', platform:'Autodesk' },
+    { id:'total', name:'Total Station Operations', price:18000, dur:'6 hrs', level:'Beginner', desc:'Field setup, traversing, stakeout and data management', platform:'Leica Academy' }
+];
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+    loadSurveys();
+    buildCourses();
+    updateHistory();
+    initPlotCanvas();
+});
+
+// ══════════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════════
+function showTab(t) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(el => { el.classList.remove('tab-active'); el.classList.add('hover:bg-gray-100'); });
+    document.getElementById('content-' + t).classList.remove('hidden');
+    document.getElementById('content-' + t).classList.add('fade-in');
+    const btn = document.getElementById('tab-' + t);
+    btn.classList.add('tab-active');
+    btn.classList.remove('hover:bg-gray-100');
+    if (t === 'plot') initPlotCanvas();
+}
+
+function showCoord(c) {
+    document.querySelectorAll('.coord-pane').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="ctab-"]').forEach(el => { el.classList.remove('bg-blue-600','text-white'); el.classList.add('bg-gray-200'); });
+    document.getElementById('coord-' + c).classList.remove('hidden');
+    const btn = document.getElementById('ctab-' + c);
+    btn.classList.add('bg-blue-600','text-white');
+    btn.classList.remove('bg-gray-200');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GPS
+// ══════════════════════════════════════════════════════════════════
+function enableGPS() {
+    if (!navigator.geolocation) { toast('GPS not supported by your browser', 'error'); return; }
+    document.getElementById('gpsInfoBox').innerHTML = '<p class="text-blue-600 pulse">🔄 Acquiring GPS signal...</p>';
+    watchId = navigator.geolocation.watchPosition(pos => {
+        gpsPos = pos.coords;
+        const acc = pos.coords.accuracy;
+        const cls = acc < 5 ? 'text-green-600' : acc < 15 ? 'text-yellow-600' : 'text-red-600';
+        const txt = acc < 5 ? 'High' : acc < 15 ? 'Medium' : 'Low';
+        document.getElementById('gpsInfoBox').innerHTML = `
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <div><span class="font-bold">Latitude:</span> <span class="font-mono">${pos.coords.latitude.toFixed(7)}°</span></div>
+                <div><span class="font-bold">Longitude:</span> <span class="font-mono">${pos.coords.longitude.toFixed(7)}°</span></div>
+                <div><span class="font-bold">Accuracy:</span> <span class="${cls} font-mono">±${acc.toFixed(1)}m (${txt})</span></div>
+                <div><span class="font-bold">Altitude:</span> <span class="font-mono">${(pos.coords.altitude||0).toFixed(1)}m</span></div>
+            </div>`;
+        document.getElementById('gpsDot').className = 'gps-dot';
+        document.getElementById('gpsLabel').textContent = 'GPS Active';
+    }, err => {
+        toast('GPS error: ' + err.message, 'error');
+    }, { enableHighAccuracy: true, maximumAge: 1000 });
+}
+
+function stopGPS() {
+    if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+    document.getElementById('gpsDot').className = 'gps-dot inactive';
+    document.getElementById('gpsLabel').textContent = 'GPS Off';
+    toast('GPS stopped', 'info');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SURVEY POINTS
+// ══════════════════════════════════════════════════════════════════
+function addGPSPoint() {
+    if (!gpsPos) { toast('Enable GPS first', 'warning'); return; }
+    const utmPt = latLonToUTM(gpsPos.latitude, gpsPos.longitude);
+    surveyPts.push({ id: surveyPts.length+1, lat: gpsPos.latitude, lon: gpsPos.longitude, n: utmPt.northing, e: utmPt.easting, elev: gpsPos.altitude||0, acc: gpsPos.accuracy, src: 'GPS' });
+    updateSurveyDisplay();
+    toast(`GPS Point ${surveyPts.length} added ±${gpsPos.accuracy.toFixed(1)}m`, 'success');
+}
+
+function addManualPoint() {
+    document.getElementById('manualInput').classList.toggle('hidden');
+}
+
+function confirmManualPoint() {
+    const n = parseFloat(document.getElementById('manualN').value);
+    const e = parseFloat(document.getElementById('manualE').value);
+    const elev = parseFloat(document.getElementById('manualElev').value)||0;
+    if (isNaN(n)||isNaN(e)) { toast('Enter valid coordinates', 'warning'); return; }
+    surveyPts.push({ id: surveyPts.length+1, n, e, elev, lat:0, lon:0, src:'Manual' });
+    document.getElementById('manualN').value='';
+    document.getElementById('manualE').value='';
+    document.getElementById('manualElev').value='';
+    document.getElementById('manualInput').classList.add('hidden');
+    updateSurveyDisplay();
+    toast(`Manual Point ${surveyPts.length} added`, 'success');
+}
+
+function undoPoint() {
+    if (surveyPts.length===0) { toast('No points to undo', 'warning'); return; }
+    surveyPts.pop();
+    updateSurveyDisplay();
+    toast('Last point removed', 'info');
+}
+
+function clearSurvey() {
+    if (!confirm('Clear all survey points?')) return;
+    surveyPts = [];
+    updateSurveyDisplay();
+    toast('Survey cleared', 'info');
+}
+
+function updateSurveyDisplay() {
+    const n = surveyPts.length;
+    document.getElementById('ptCount').textContent = n;
+    let ha = 0, ac = 0, perim = 0;
+    if (n >= 3) {
+        const area = shoelace(surveyPts);
+        ha = area/10000; ac = ha*2.47105;
+        perim = calcPerimeter(surveyPts);
+    }
+    document.getElementById('areaHa').textContent = ha.toFixed(4);
+    document.getElementById('areaAc').textContent = ac.toFixed(4);
+    document.getElementById('perim').textContent = perim.toFixed(0);
+    document.getElementById('plotsCount').textContent = ((ha*10000)/1500).toFixed(1);
+
+    if (n === 0) { document.getElementById('pointsTable').innerHTML = ''; return; }
+    let html = '<table class="w-full text-xs border-collapse"><thead><tr class="bg-gray-100"><th class="p-2 border">Pt</th><th class="p-2 border">Northing</th><th class="p-2 border">Easting</th><th class="p-2 border">Elev</th><th class="p-2 border">Src</th></tr></thead><tbody>';
+    surveyPts.forEach(p => { html += `<tr class="hover:bg-gray-50"><td class="p-2 border text-center font-bold">${p.id}</td><td class="p-2 border font-mono">${p.n.toFixed(3)}</td><td class="p-2 border font-mono">${p.e.toFixed(3)}</td><td class="p-2 border font-mono">${p.elev.toFixed(3)}</td><td class="p-2 border text-center">${p.src}</td></tr>`; });
+    html += '</tbody></table>';
+    document.getElementById('pointsTable').innerHTML = html;
+}
+
+function completeSurvey() {
+    const cN = v('clientName'), cP = v('clientPhone'), pN = v('projectName'), loc = v('location');
+    if (!cN||!cP||!pN||!loc) { toast('Fill in all required client fields', 'warning'); return; }
+    if (surveyPts.length < 3) { toast('Need at least 3 points', 'warning'); return; }
+    const area = shoelace(surveyPts), ha = area/10000, ac = ha*2.47105, perim = calcPerimeter(surveyPts);
+    const code = 'NGS-' + Math.random().toString(36).substr(2,8).toUpperCase();
+    const survey = { id: Date.now(), clientName:cN, clientPhone:cP, clientEmail:v('clientEmail'), projectName:pN, location:loc, fileNumber:v('fileNumber'), surveyType:v('surveyType'), hectares:ha, acres:ac, perimeter:perim, plots:ha*10000/1500, points:surveyPts.length, verificationCode:code, savedAt:new Date().toISOString(), coordSystem:v('coordSys') };
+    surveys.push(survey);
+    saveSurveys();
+    updateHistory();
+    showModal(`
+        <div class="text-center">
+            <div class="text-6xl mb-3">✅</div>
+            <h3 class="text-2xl font-black text-green-600 mb-4">Survey Complete!</h3>
+            <div class="bg-green-50 border-2 border-dashed border-green-500 p-5 rounded-xl mb-5">
+                <div class="text-sm text-gray-500 mb-1">WGS 84 | ${survey.coordSystem}</div>
+                <div class="text-xs text-gray-400 mb-3">Verification Code</div>
+                <div class="text-3xl font-black font-mono text-green-600 tracking-widest">${code}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 mb-5">
+                <div class="p-3 bg-purple-100 rounded-xl"><div class="text-xs text-gray-500">Hectares</div><div class="text-2xl font-black text-purple-600">${ha.toFixed(4)}</div></div>
+                <div class="p-3 bg-green-100 rounded-xl"><div class="text-xs text-gray-500">Acres</div><div class="text-2xl font-black text-green-600">${ac.toFixed(4)}</div></div>
+                <div class="p-3 bg-blue-100 rounded-xl"><div class="text-xs text-gray-500">Perimeter (m)</div><div class="text-xl font-black text-blue-600">${perim.toFixed(2)}</div></div>
+                <div class="p-3 bg-orange-100 rounded-xl"><div class="text-xs text-gray-500">Plots (50×100)</div><div class="text-xl font-black text-orange-600">${(ha*10000/1500).toFixed(2)}</div></div>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-xl text-sm text-left mb-5">
+                <div><strong>Client:</strong> ${cN} | ${cP}</div>
+                <div><strong>Project:</strong> ${pN}</div>
+                <div><strong>Location:</strong> ${loc}</div>
+                <div><strong>Points:</strong> ${surveyPts.length}</div>
+                <div><strong>Surveyor:</strong> ${CFG.name}</div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeModal()" class="gradient-bg text-white py-3 rounded-xl font-bold">Done</button>
+                <button onclick="closeModal(); showTab('history')" class="bg-gray-600 text-white py-3 rounded-xl font-bold">View History</button>
+            </div>
+        </div>`);
+    surveyPts = [];
+    updateSurveyDisplay();
+}
+
+function emailSurvey() {
+    const email = v('clientEmail');
+    if (!email) { toast('Enter client email first', 'warning'); return; }
+    const pN = v('projectName')||'Survey Project';
+    const body = `Survey Report — ${pN}\nSurveyor: ${CFG.name}\nEmail: ${CFG.email}\nPhone: +234-811-755-4948\n\nPoints: ${surveyPts.length}\nContact: ${CFG.phone}`;
+    window.location.href = `mailto:${email}?subject=Survey Report - ${pN}&body=${encodeURIComponent(body)}`;
+}
+
+function whatsappSurvey() {
+    const msg = `Survey Report\nProject: ${v('projectName')||'N/A'}\nClient: ${v('clientName')||'N/A'}\nPoints: ${surveyPts.length}\nSurveyor: ${CFG.name}\nContact: ${CFG.email}`;
+    window.open(`${CFG.whatsapp}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COORDINATE CONVERSIONS
+// ══════════════════════════════════════════════════════════════════
+function latLonToUTM(lat, lon) {
+    const zone = Math.floor((lon + 180) / 6) + 1;
+    const k0=0.9996, a=6378137.0, e=0.081819191;
+    const latR = lat*Math.PI/180;
+    const lonO = (zone-1)*6-180+3;
+    const lonR = (lon-lonO)*Math.PI/180;
+    const N = a/Math.sqrt(1-e*e*Math.sin(latR)**2);
+    const T = Math.tan(latR)**2;
+    const C = (e*e/(1-e*e))*Math.cos(latR)**2;
+    const A = lonR*Math.cos(latR);
+    const M = a*((1-e*e/4-3*e**4/64)*latR-(3*e*e/8+3*e**4/32)*Math.sin(2*latR)+(15*e**4/256)*Math.sin(4*latR));
+    const easting = k0*N*(A+(1-T+C)*A**3/6)+500000;
+    const northing = k0*(M+N*Math.tan(latR)*(A*A/2+(5-T+9*C+4*C*C)*A**4/24));
+    return { zone, easting, northing };
+}
+
+function convLatToUTM() {
+    const lat=parseFloat(g('ll-lat').value), lon=parseFloat(g('ll-lon').value);
+    if (isNaN(lat)||isNaN(lon)) { toast('Enter valid coordinates','warning'); return; }
+    const utm = latLonToUTM(lat,lon);
+    g('res-lltoutm').innerHTML = `<div>Zone: <strong>${utm.zone}N</strong></div><div>Easting: <strong>${utm.easting.toFixed(3)} m</strong></div><div>Northing: <strong>${utm.northing.toFixed(3)} m</strong></div>`;
+    g('res-lltoutm').classList.remove('hidden');
+    toast('Converted!','success');
+}
+
+function convUTMToLat() {
+    const zone=parseFloat(g('utm-zone').value), e=parseFloat(g('utm-e').value), n=parseFloat(g('utm-n').value);
+    if (isNaN(zone)||isNaN(e)||isNaN(n)) { toast('Enter all values','warning'); return; }
+    const k0=0.9996, a=6378137.0, e1c=0.081819191;
+    const x=e-500000; const M=n/k0;
+    const mu=M/(a*(1-e1c*e1c/4-3*e1c**4/64));
+    const e1=(1-Math.sqrt(1-e1c*e1c))/(1+Math.sqrt(1-e1c*e1c));
+    const phi1=mu+(3*e1/2-27*e1**3/32)*Math.sin(2*mu)+(21*e1*e1/16)*Math.sin(4*mu);
+    const lat=phi1*180/Math.PI;
+    const lonO=(zone-1)*6-180+3;
+    const N1=a/Math.sqrt(1-e1c*e1c*Math.sin(phi1)**2);
+    const lon=lonO+(x/(k0*N1*Math.cos(phi1)))*180/Math.PI;
+    g('res-utmtoll').innerHTML = `<div>Latitude: <strong>${lat.toFixed(7)}°</strong></div><div>Longitude: <strong>${lon.toFixed(7)}°</strong></div>`;
+    g('res-utmtoll').classList.remove('hidden');
+    toast('Converted!','success');
+}
+
+function calcBearingDist() {
+    const sN=parseFloat(g('bd-n').value), sE=parseFloat(g('bd-e').value);
+    const bear=parseFloat(g('bd-bearing').value), dist=parseFloat(g('bd-dist').value);
+    if ([sN,sE,bear,dist].some(isNaN)) { toast('Enter all values','warning'); return; }
+    const bR=bear*Math.PI/180;
+    const newN=sN+dist*Math.cos(bR), newE=sE+dist*Math.sin(bR);
+    g('bd-result').innerHTML = `
+        <div class="grid grid-cols-2 gap-3 text-sm">
+            <div><strong>New Northing:</strong> <span class="font-mono">${newN.toFixed(3)} m</span></div>
+            <div><strong>New Easting:</strong> <span class="font-mono">${newE.toFixed(3)} m</span></div>
+        </div>
+        <button onclick="surveyPts.push({id:surveyPts.length+1,n:${newN},e:${newE},elev:0,src:'Calc'}); updateSurveyDisplay(); showTab('survey'); toast('Added to survey','success');" class="mt-3 w-full gradient-bg text-white py-2 rounded-lg font-bold text-sm">➕ Add to Survey</button>`;
+    g('bd-result').classList.remove('hidden');
+    toast('Point calculated!','success');
+}
+
+function convertMultiFormat() {
+    const lat=parseFloat(g('mf-lat').value), lon=parseFloat(g('mf-lon').value);
+    if (isNaN(lat)||isNaN(lon)) { toast('Enter coordinates','warning'); return; }
+    const toDMS=(v,isLat)=>{const d=Math.floor(Math.abs(v)),m=Math.floor((Math.abs(v)-d)*60),s=((Math.abs(v)-d-m/60)*3600).toFixed(3);return `${d}° ${m}' ${s}" ${isLat?(v>=0?'N':'S'):(v>=0?'E':'W')}`;};
+    const utm=latLonToUTM(lat,lon);
+    g('mf-results').innerHTML = `
+        <div class="p-2 bg-white rounded border"><div class="text-gray-500 text-xs">Decimal Degrees</div><div>${lat.toFixed(7)}°N, ${lon.toFixed(7)}°E</div></div>
+        <div class="p-2 bg-white rounded border"><div class="text-gray-500 text-xs">DMS</div><div>${toDMS(lat,true)}, ${toDMS(lon,false)}</div></div>
+        <div class="p-2 bg-white rounded border"><div class="text-gray-500 text-xs">DDM</div><div>${Math.floor(Math.abs(lat))}° ${((Math.abs(lat)-Math.floor(Math.abs(lat)))*60).toFixed(5)}'N, ${Math.floor(Math.abs(lon))}° ${((Math.abs(lon)-Math.floor(Math.abs(lon)))*60).toFixed(5)}'E</div></div>
+        <div class="p-2 bg-white rounded border"><div class="text-gray-500 text-xs">UTM (WGS84)</div><div>Zone ${utm.zone}N | E: ${utm.easting.toFixed(3)} | N: ${utm.northing.toFixed(3)}</div></div>`;
+    toast('All formats converted!','success');
+}
+
+// Traverse
+let travLegData = [];
+function addTravLeg() {
+    const idx = travLegData.length;
+    travLegData.push({bearing:0, distance:0});
+    const div = document.createElement('div');
+    div.className='grid grid-cols-3 gap-2 items-end';
+    div.id='leg-'+idx;
+    div.innerHTML=`<div><label class="text-xs font-bold">Bearing °</label><input type="number" step="0.0001" id="lb${idx}" placeholder="90.0000" class="w-full px-2 py-2 border-2 rounded font-mono text-sm mt-1"></div><div><label class="text-xs font-bold">Distance m</label><input type="number" step="0.001" id="ld${idx}" placeholder="100.000" class="w-full px-2 py-2 border-2 rounded font-mono text-sm mt-1"></div><button onclick="removeLeg(${idx})" class="bg-red-500 text-white py-2 px-3 rounded text-sm font-bold mb-0.5">✕</button>`;
+    document.getElementById('trav-legs').appendChild(div);
+}
+function removeLeg(i){const el=document.getElementById('leg-'+i); if(el) el.remove();}
+function computeTraverse() {
+    const n0=parseFloat(g('trav-n0').value)||1000, e0=parseFloat(g('trav-e0').value)||1000;
+    const legs=[]; let n=n0,e=e0;
+    document.querySelectorAll('[id^="lb"]').forEach((el,i)=>{const b=parseFloat(el.value),d=parseFloat(document.querySelectorAll('[id^="ld"]')[i]?.value);if(!isNaN(b)&&!isNaN(d)) legs.push({b,d});});
+    if (legs.length<1){toast('Add at least one leg','warning');return;}
+    let rows='<tr class="bg-gray-100"><th class="p-2 border">Leg</th><th class="p-2 border">Bearing</th><th class="p-2 border">Distance</th><th class="p-2 border">ΔN</th><th class="p-2 border">ΔE</th><th class="p-2 border">Northing</th><th class="p-2 border">Easting</th></tr>';
+    legs.forEach((l,i)=>{const bR=l.b*Math.PI/180,dn=l.d*Math.cos(bR),de=l.d*Math.sin(bR);n+=dn;e+=de;rows+=`<tr><td class="p-2 border text-center">${i+1}</td><td class="p-2 border font-mono">${l.b.toFixed(4)}°</td><td class="p-2 border font-mono">${l.d.toFixed(3)}m</td><td class="p-2 border font-mono">${dn.toFixed(3)}</td><td class="p-2 border font-mono">${de.toFixed(3)}</td><td class="p-2 border font-mono">${n.toFixed(3)}</td><td class="p-2 border font-mono">${e.toFixed(3)}</td></tr>`;});
+    const closeN=n0-n, closeE=e0-e, totalDist=legs.reduce((s,l)=>s+l.d,0);
+    const err=Math.sqrt(closeN**2+closeE**2), ratio=err>0?totalDist/err:0;
+    g('trav-result').innerHTML=`<table class="w-full text-xs border-collapse mb-3">${rows}</table><div class="p-3 bg-teal-50 rounded text-xs"><strong>Closure Error:</strong> N:${closeN.toFixed(4)} E:${closeE.toFixed(4)} | Linear: ${err.toFixed(4)}m | Ratio 1:${ratio.toFixed(0)}</div>`;
+    g('trav-result').classList.remove('hidden');
+    toast('Traverse computed!','success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PLOT CANVAS
+// ══════════════════════════════════════════════════════════════════
+let plotCanvas, plotCtx;
+function initPlotCanvas() {
+    plotCanvas = document.getElementById('plotCanvas');
+    if (!plotCanvas) return;
+    plotCtx = plotCanvas.getContext('2d');
+    drawGrid();
+}
+
+function drawGrid() {
+    if (!plotCtx) return;
+    plotCtx.fillStyle='#f9fafb'; plotCtx.fillRect(0,0,plotCanvas.width,plotCanvas.height);
+    plotCtx.strokeStyle='#e5e7eb'; plotCtx.lineWidth=1;
+    for(let i=0;i<=plotCanvas.width;i+=50){plotCtx.beginPath();plotCtx.moveTo(i,0);plotCtx.lineTo(i,plotCanvas.height);plotCtx.stroke();}
+    for(let i=0;i<=plotCanvas.height;i+=50){plotCtx.beginPath();plotCtx.moveTo(0,i);plotCtx.lineTo(plotCanvas.width,i);plotCtx.stroke();}
+}
+
+function generatePlot() {
+    const owner=v('plotOwner'), addr=v('plotAddress'), lat=parseFloat(v('plotLat')), lon=parseFloat(v('plotLon'));
+    const w=parseFloat(v('plotWidth')), d=parseFloat(v('plotDepth'));
+    if (!owner||!addr||isNaN(lat)||isNaN(lon)) { toast('Fill in all plot details','warning'); return; }
+    const utm=latLonToUTM(lat,lon);
+    plotPts=[
+        {id:1,n:utm.northing,e:utm.easting},
+        {id:2,n:utm.northing,e:utm.easting+w},
+        {id:3,n:utm.northing-d,e:utm.easting+w},
+        {id:4,n:utm.northing-d,e:utm.easting}
+    ];
+    redrawPlot(owner,addr,w,d,utm);
+    toast('Plot layout generated!','success');
+}
+
+function redrawPlot(owner,addr,w,d,utm) {
+    drawGrid();
+    if (plotPts.length<2) return;
+    const margin=70, pw=plotCanvas.width-2*margin, ph=plotCanvas.height-2*margin;
+    const ns=plotPts.map(p=>p.n), es=plotPts.map(p=>p.e);
+    const minN=Math.min(...ns),maxN=Math.max(...ns),minE=Math.min(...es),maxE=Math.max(...es);
+    const rangeN=maxN-minN||1, rangeE=maxE-minE||1;
+    const sx=p=>margin+((p.e-minE)/rangeE)*pw, sy=p=>plotCanvas.height-margin-((p.n-minN)/rangeN)*ph;
+    plotCtx.strokeStyle='#7c3aed'; plotCtx.lineWidth=3; plotCtx.beginPath();
+    plotPts.forEach((p,i)=>{i===0?plotCtx.moveTo(sx(p),sy(p)):plotCtx.lineTo(sx(p),sy(p));});
+    plotCtx.closePath(); plotCtx.stroke();
+    plotCtx.fillStyle='rgba(124,58,237,0.08)'; plotCtx.fill();
+    plotPts.forEach(p=>{plotCtx.fillStyle='#10b981';plotCtx.beginPath();plotCtx.arc(sx(p),sy(p),6,0,2*Math.PI);plotCtx.fill();plotCtx.fillStyle='#111';plotCtx.font='bold 11px Arial';plotCtx.fillText(`P${p.id} (N:${p.n.toFixed(0)} E:${p.e.toFixed(0)})`,sx(p)+8,sy(p)-8);});
+    // Labels
+    plotCtx.fillStyle='#1f2937'; plotCtx.font='bold 13px Arial'; plotCtx.textAlign='center';
+    plotCtx.fillText(`📍 ${owner}`, plotCanvas.width/2, 25);
+    plotCtx.fillText(addr, plotCanvas.width/2, 42);
+    plotCtx.font='12px Arial'; plotCtx.fillStyle='#6b7280';
+    plotCtx.fillText(`Width: ${w}m | Depth: ${d}m | Zone ${utm?.zone||'31'}N`, plotCanvas.width/2, plotCanvas.height-10);
+    plotCtx.textAlign='left';
+}
+
+function clearPlotCanvas() { plotPts=[]; drawGrid(); toast('Canvas cleared','info'); }
+function exportPlot() { const a=document.createElement('a');a.download=`plot-${Date.now()}.png`;a.href=plotCanvas.toDataURL();a.click();toast('Plot exported!','success'); }
+function calcCanvasArea() {
+    if (plotPts.length<3) { toast('Need at least 3 points','warning'); return; }
+    const area=shoelace(plotPts), ha=area/10000, ac=ha*2.47105, perim=calcPerimeter(plotPts);
+    g('plotAreaResult').innerHTML=`<div class="grid grid-cols-4 gap-3 text-center"><div><div class="text-xs text-gray-500">Sq Meters</div><div class="text-xl font-black text-green-600">${area.toFixed(2)}</div></div><div><div class="text-xs text-gray-500">Hectares</div><div class="text-xl font-black text-green-600">${ha.toFixed(4)}</div></div><div><div class="text-xs text-gray-500">Acres</div><div class="text-xl font-black text-green-600">${ac.toFixed(4)}</div></div><div><div class="text-xs text-gray-500">Perimeter</div><div class="text-xl font-black text-green-600">${perim.toFixed(2)}m</div></div></div>`;
+    g('plotAreaResult').classList.remove('hidden');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GIS
+// ══════════════════════════════════════════════════════════════════
+function requestGIS(service) {
+    const msg=`🗺️ GIS Service Request\n\nService: ${service}\n\nPlease contact me with pricing and timeline.\n\n📞 Sending from SurveyPro Elite`;
+    window.open(`${CFG.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
+    toast(`${service} request sent!`,'success');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// VERIFY
+// ══════════════════════════════════════════════════════════════════
+function verifySurveyCode() {
+    const code=g('verifyInput').value.trim().toUpperCase();
+    if (!code) { toast('Enter a verification code','warning'); return; }
+    const s=surveys.find(x=>x.verificationCode===code);
+    const out=g('verifyResult');
+    if (s) { out.innerHTML=`<div class="p-5 bg-green-50 border-2 border-green-500 rounded-xl"><div class="flex items-center gap-3 mb-4"><div class="text-4xl">✅</div><h3 class="text-xl font-black text-green-700">Survey Verified!</h3></div><div class="grid grid-cols-2 gap-2 text-sm"><span class="font-bold">Code:</span><span class="font-mono">${s.verificationCode}</span><span class="font-bold">Project:</span><span>${s.projectName}</span><span class="font-bold">Client:</span><span>${s.clientName}</span><span class="font-bold">Location:</span><span>${s.location}</span><span class="font-bold">Area:</span><span class="text-green-600 font-bold">${s.hectares.toFixed(4)} ha</span><span class="font-bold">Date:</span><span>${new Date(s.savedAt).toLocaleDateString('en-NG')}</span></div></div>`; }
+    else { out.innerHTML=`<div class="p-5 bg-red-50 border-2 border-red-500 rounded-xl text-center"><div class="text-4xl mb-2">❌</div><h3 class="text-xl font-black text-red-700">Invalid Code</h3><p class="text-sm text-gray-600 mt-2">Code not found in database</p></div>`; }
+}
+
+function requestCofO() {
+    const msg=`🔒 C of O Verification Request\n\nI need professional C of O verification service.\nPlease contact me with pricing and timeline.`;
+    window.open(`${CFG.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EQUIPMENT RENTAL — 45/55 PAYMENT SPLIT
+// ══════════════════════════════════════════════════════════════════
+function bookEquipment(name, price, partnerUrl) {
+    const you = Math.round(price * 0.45), partner = price - you;
+    showModal(`
+        <div>
+            <h3 class="text-2xl font-black text-center mb-2">🎯 ${name}</h3>
+            <div class="payment-split mb-4">
+                <h4 class="font-bold text-center mb-3">💰 Payment Split — Scale 1:10</h4>
+                <div class="split-item"><div><div class="text-sm">Your Commission (Arnold)</div><div class="font-bold">Opay: 8117554948</div></div><div><div class="split-pct">4.5</div><div class="text-center text-sm">₦${you.toLocaleString()}</div></div></div>
+                <div class="split-item"><div><div class="text-sm">Equipment Partner (Licensed)</div></div><div><div class="split-pct">5.5</div><div class="text-center text-sm">₦${partner.toLocaleString()}</div></div></div>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-xl mb-4 text-sm">
+                <div class="flex justify-between py-1 border-b"><span>Total Price</span><span class="font-bold">₦${price.toLocaleString()}/day</span></div>
+                <div class="flex justify-between py-1 border-b text-green-600"><span>✅ Your Instant Earn</span><span class="font-bold">₦${you.toLocaleString()}</span></div>
+                <div class="flex justify-between py-1 text-purple-600"><span>🏢 Partner receives</span><span class="font-bold">₦${partner.toLocaleString()}</span></div>
+            </div>
+            <div id="bookingForm" class="space-y-3 mb-4">
+                <input id="bName" placeholder="Your Full Name *" class="w-full px-4 py-3 border-2 rounded-lg">
+                <input id="bPhone" placeholder="Phone Number *" type="tel" class="w-full px-4 py-3 border-2 rounded-lg">
+                <div class="grid grid-cols-2 gap-3">
+                    <input id="bDate" type="date" class="w-full px-4 py-3 border-2 rounded-lg">
+                    <input id="bDays" type="number" min="1" placeholder="Days" class="w-full px-4 py-3 border-2 rounded-lg">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="processEquipPayment('${name}',${price},${you},${partner},'${partnerUrl}')" class="gradient-green text-white py-3 rounded-xl font-bold">✅ Confirm & Pay ₦${price.toLocaleString()}</button>
+                <button onclick="closeModal()" class="bg-gray-500 text-white py-3 rounded-xl font-bold">Cancel</button>
+            </div>
+        </div>`);
+}
+
+function processEquipPayment(name, price, you, partner, partnerUrl) {
+    const bN=v('bName'), bP=v('bPhone'), bD=v('bDate'), bDays=v('bDays');
+    if (!bN||!bP||!bD||!bDays) { toast('Fill all booking fields','warning'); return; }
+    // Paystack payment — 45% of amount goes to your account
+    const handler = PaystackPop.setup({
+        key: CFG.paystackKey,
+        email: CFG.email,
+        amount: price * 100, // kobo
+        currency: 'NGN',
+        ref: 'SPRO-' + Date.now(),
+        metadata: { equipment: name, renter: bN, phone: bP, date: bD, days: bDays, yourShare: you, partnerShare: partner },
+        callback: function(response) {
+            const msg = `🎯 EQUIPMENT BOOKED\n\nEquipment: ${name}\nCustomer: ${bN}\nPhone: ${bP}\nDate: ${bD}\nDays: ${bDays}\n\n💰 PAYMENT SPLIT:\nYour 45%: ₦${you.toLocaleString()} → Opay ${CFG.opay}\nPartner 55%: ₦${partner.toLocaleString()}\n\nRef: ${response.reference}\n\n📞 Surveyor: ${CFG.name} | ${CFG.email}`;
+            closeModal();
+            banner(`✅ Payment ₦${price.toLocaleString()} confirmed! Ref: ${response.reference} — Your ₦${you.toLocaleString()} credited to Opay ${CFG.opay}`, 'success');
+            setTimeout(() => { window.open(`${CFG.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); window.open(partnerUrl,'_blank'); }, 1500);
+        },
+        onClose: function() { toast('Payment cancelled','info'); }
+    });
+    handler.openIframe();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TRAINING — 45/55 SPLIT
+// ══════════════════════════════════════════════════════════════════
+function buildCourses() {
+    const grid = g('coursesGrid');
+    if (!grid) return;
+    grid.innerHTML = COURSES.map(c => `
+        <div class="course-card card-hover">
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="font-bold text-purple-600">${c.name}</h4>
+                <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-bold">${c.level}</span>
+            </div>
+            <p class="text-gray-600 text-sm mb-3">${c.desc}</p>
+            <div class="flex gap-2 text-xs text-gray-500 mb-3">
+                <span>⏱️ ${c.dur}</span><span>🏛️ ${c.platform}</span>
+            </div>
+            <div class="text-2xl font-black text-green-600 mb-1">₦${c.price.toLocaleString()}</div>
+            <div class="earn-badge mb-3">You earn: ₦${Math.round(c.price*0.45).toLocaleString()} (45%)</div>
+            <button onclick="enrollCourse('${c.id}','${c.name}',${c.price},'${c.platform}')" class="w-full gradient-bg text-white py-3 rounded-xl font-bold hover:shadow-lg">🎓 Enroll — Earn ₦${Math.round(c.price*0.45).toLocaleString()}</button>
+        </div>`).join('');
+}
+
+function enrollCourse(id, name, price, platform) {
+    const you=Math.round(price*0.45), provider=price-you;
+    const email=prompt(`🎓 Enroll: ${name}\n\nEnter your email for course access:`);
+    if (!email||!email.includes('@')) { toast('Enter valid email','warning'); return; }
+    const handler = PaystackPop.setup({
+        key: CFG.paystackKey,
+        email: email,
+        amount: price * 100,
+        currency: 'NGN',
+        ref: 'COURSE-' + Date.now(),
+        callback: function(response) {
+            const msg=`🎓 COURSE ENROLLED\n\nCourse: ${name}\nPlatform: ${platform}\nEmail: ${email}\n\n💰 YOUR CUT (45%): ₦${you.toLocaleString()} → Opay ${CFG.opay}\nProvider (55%): ₦${provider.toLocaleString()}\n\nRef: ${response.reference}`;
+            banner(`✅ Enrolled in ${name}! Your ₦${you.toLocaleString()} → Opay ${CFG.opay}`,'success');
+            setTimeout(()=>{ window.open(`${CFG.whatsapp}?text=${encodeURIComponent(msg)}`,'_blank'); }, 1500);
+        },
+        onClose: ()=>{ toast('Payment cancelled','info'); }
+    });
+    handler.openIframe();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════════════════════════════
+function updateHistory() {
+    const cont = g('historyContent');
+    if (!cont) return;
+    if (surveys.length===0) { cont.innerHTML='<div class="text-center py-12 text-gray-400"><p class="text-5xl mb-3">📂</p><p class="text-lg font-semibold">No saved surveys yet</p></div>'; return; }
+    cont.innerHTML = surveys.slice().reverse().map((s,i)=>`
+        <div class="border-2 border-gray-200 rounded-xl p-5 mb-4 hover:border-purple-400 transition card-hover">
+            <div class="flex justify-between items-start mb-3">
+                <div><h3 class="font-black text-lg text-purple-700">${s.projectName}</h3><p class="text-sm text-gray-500">${s.location}</p></div>
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-mono font-bold">${s.verificationCode}</span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 mb-3 text-xs text-center">
+                <div class="bg-blue-50 p-2 rounded"><div class="text-gray-400">Ha</div><div class="font-black text-blue-700">${s.hectares.toFixed(4)}</div></div>
+                <div class="bg-green-50 p-2 rounded"><div class="text-gray-400">Acres</div><div class="font-black text-green-700">${s.acres.toFixed(4)}</div></div>
+                <div class="bg-purple-50 p-2 rounded"><div class="text-gray-400">Points</div><div class="font-black text-purple-700">${s.points}</div></div>
+                <div class="bg-orange-50 p-2 rounded"><div class="text-gray-400">Plots</div><div class="font-black text-orange-700">${s.plots.toFixed(1)}</div></div>
+            </div>
+            <div class="text-xs text-gray-500 mb-3"><span>${s.clientName} · ${s.clientPhone}</span><span class="mx-2">|</span><span>${new Date(s.savedAt).toLocaleDateString('en-NG')}</span></div>
+            <div class="flex gap-2">
+                <button onclick="shareSurvey(${surveys.length-1-i})" class="flex-1 bg-blue-600 text-white py-2 rounded-lg text-sm font-bold hover:bg-blue-700">📱 Share</button>
+                <button onclick="deleteSurvey(${surveys.length-1-i})" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-600">🗑️</button>
+            </div>
+        </div>`).join('');
+}
+
+function shareSurvey(i) {
+    const s=surveys[i];
+    const txt=`Survey Report — ${s.projectName}\nLocation: ${s.location}\nClient: ${s.clientName}\nArea: ${s.hectares.toFixed(4)} ha (${s.acres.toFixed(4)} acres)\nPerimeter: ${s.perimeter.toFixed(2)}m\nVerification: ${s.verificationCode}\nDate: ${new Date(s.savedAt).toLocaleDateString('en-NG')}\n\nSurveyPro Elite | ${CFG.email}`;
+    if (navigator.share) { navigator.share({title:`Survey — ${s.projectName}`,text:txt}); }
+    else { navigator.clipboard.writeText(txt); toast('Survey details copied!','success'); }
+}
+
+function deleteSurvey(i) {
+    if (!confirm('Delete this survey?')) return;
+    surveys.splice(i,1); saveSurveys(); updateHistory(); toast('Survey deleted','info');
+}
+
+function clearAllHistory() {
+    if (!confirm('Delete ALL surveys? Cannot be undone.')) return;
+    surveys=[]; saveSurveys(); updateHistory(); toast('History cleared','info');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════════
+function shoelace(pts) {
+    let a=0;
+    for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;a+=pts[i].e*pts[j].n;a-=pts[j].e*pts[i].n;}
+    return Math.abs(a/2);
+}
+function calcPerimeter(pts) {
+    let p=0;
+    for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;p+=Math.sqrt((pts[j].n-pts[i].n)**2+(pts[j].e-pts[i].e)**2);}
+    return p;
+}
+function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function g(id){return document.getElementById(id);}
+function saveSurveys(){localStorage.setItem('sp_elite_surveys',JSON.stringify(surveys));}
+function loadSurveys(){const s=localStorage.getItem('sp_elite_surveys');if(s){surveys=JSON.parse(s);}}
+function toast(msg,type='info'){const t=g('toast'),tm=g('toastMsg');const icons={success:'✅',warning:'⚠️',error:'❌',info:'💡'};tm.textContent=`${icons[type]||'📋'} ${msg}`;t.className='toast show';setTimeout(()=>t.className='toast',3500);}
+function banner(msg){const b=g('banner'),bm=g('bannerMsg');bm.textContent=msg;b.classList.remove('hidden');setTimeout(closeBanner,6000);}
+function closeBanner(){g('banner').classList.add('hidden');}
+function showModal(html){g('modalContent').innerHTML=html;g('modal').classList.add('show');}
+function closeModal(){g('modal').classList.remove('show');}
+function toggleDark(){document.body.style.filter=darkMode?'':'invert(0.9) hue-rotate(180deg)';darkMode=!darkMode;}
+function setLang(l){toast(`Language: ${l} (Coming soon)`);}
+
+// Close modal on background click
+g('modal').addEventListener('click',e=>{ if(e.target===g('modal')) closeModal(); });
+</script>
+</body>
+</html>
