@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SurveyPro Elite | Nigeria's #1 Professional Surveying Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+body{background:#f1f5f9;color:#0f172a;min-height:100vh;}
+.gradient-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);}
+.gradient-green{background:linear-gradient(135deg,#10b981 0%,#059669 100%);}
+.gradient-orange{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);}
+.hidden{display:none!important;}
+.tab-active{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff!important;}
+.fade-in{animation:fadeIn 0.3s ease-in;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pulse{animation:pulse 2s infinite;}
+.card-hover:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.15);transition:all 0.3s ease;}
+canvas{border:2px solid #e5e7eb;border-radius:10px;background:#fff;cursor:crosshair;width:100%;height:auto;}
+.payment-split{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:12px;padding:24px;margin-bottom:20px;}
+.split-item{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:16px;margin-bottom:10px;}
+.split-pct{font-size:2em;font-weight:900;letter-spacing:-1px;}
+.equipment-card{border:2px solid #e5e7eb;border-radius:12px;padding:20px;transition:all 0.3s;position:relative;overflow:hidden;}
+.equipment-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#667eea,#10b981);}
+.equipment-card:hover{border-color:#667eea;box-shadow:0 10px 28px rgba(102,126,234,0.15);transform:translateY(-4px);}
+.price-big{font-size:2em;font-weight:900;color:#10b981;margin:10px 0;}
+.earn-badge{display:inline-block;background:#ecfdf5;border:2px solid #10b981;color:#065f46;padding:4px 12px;border-radius:20px;font-weight:700;font-size:0.8em;margin-bottom:12px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;backdrop-filter:blur(4px);}
+.modal-overlay.show{display:flex;}
+.modal-box{background:#fff;border-radius:16px;padding:32px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);}
+</style>
+</head>
+<body>
+
+<!-- Success Banner -->
+<div id="successBanner" class="hidden fixed top-0 left-0 right-0 z-50" style="animation:slideDown 0.5s;">
+<div id="bannerContent" class="px-4 py-3 text-white font-semibold flex items-center justify-between">
+<span id="bannerMessage"></span>
+<button onclick="closeBanner()" class="ml-4 text-white/80 hover:text-white text-xl font-bold">✕</button>
+</div>
+</div>
+
+<!-- Header -->
+<header class="gradient-bg text-white shadow-lg sticky top-0 z-40">
+<div class="max-w-6xl mx-auto px-4 py-4">
+<div class="flex justify-between items-center flex-wrap gap-3">
+<div>
+<h1 class="text-2xl font-black">🎯 SurveyPro Elite</h1>
+<p class="text-xs opacity-90">Nigeria's #1 Professional Surveying & Equipment Platform · Commercial v7.0</p>
+</div>
+<div class="flex items-center space-x-3">
+<div id="gpsStatus" class="flex items-center space-x-2 bg-white/20 px-3 py-1.5 rounded-lg text-sm font-semibold">
+<span id="gpsDot" class="w-2 h-2 rounded-full bg-red-500"></span>
+<span id="gpsLabel">GPS OFF</span>
+</div>
+<select class="bg-white/20 text-white px-3 py-1.5 rounded-lg text-sm border-0 font-semibold" onchange="changeLang(this.value)">
+<option value="en">🇬🇧 EN</option>
+<option value="ha">🇳🇬 HA</option>
+<option value="yo">🇳🇬 YO</option>
+<option value="ig">🇳🇬 IG</option>
+</select>
+<button onclick="toggleDark()" class="bg-white/20 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-white/30">🌙</button>
+</div>
+</div>
+</div>
+</header>
+
+<!-- Navigation -->
+<div class="max-w-6xl mx-auto px-4 py-4">
+<div class="bg-white rounded-xl shadow-lg p-2 flex overflow-x-auto space-x-2">
+<button onclick="showTab('survey')" id="tab-survey" class="tab-active px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm">📊 Survey</button>
+<button onclick="showTab('coords')" id="tab-coords" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">🌍 Coordinates</button>
+<button onclick="showTab('plot')" id="tab-plot" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">📐 Plot</button>
+<button onclick="showTab('gis')" id="tab-gis" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">🗺️ GIS</button>
+<button onclick="showTab('verify')" id="tab-verify" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">🔒 C of O</button>
+<button onclick="showTab('equipment')" id="tab-equipment" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">🎯 Equipment</button>
+<button onclick="showTab('training')" id="tab-training" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">🎓 Training</button>
+<button onclick="showTab('services')" id="tab-services" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">💼 Services</button>
+<button onclick="showTab('history')" id="tab-history" class="px-4 py-2 rounded-lg font-semibold whitespace-nowrap text-sm hover:bg-gray-100">📁 History</button>
+</div>
+</div>
+
+<main class="max-w-6xl mx-auto px-4 pb-20">
+
+<!-- SURVEY TAB -->
+<div id="content-survey" class="tab-content">
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+<h2 class="text-xl font-bold mb-4 flex items-center gap-2">📡 GPS Live Positioning</h2>
+<div id="gpsInfo" class="mb-4 p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
+<p class="text-gray-600">Click <strong>Enable GPS</strong> to start live positioning for your survey.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button onclick="enableGPS()" class="gradient-green text-white px-6 py-3 rounded-lg font-bold hover:opacity-90 transition">📡 Enable GPS</button>
+<button onclick="stopGPS()" class="bg-red-500 text-white px-6 py-3 rounded-lg font-bold hover:bg-red-600 transition">⛔ Stop GPS</button>
+</div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+<h2 class="text-xl font-bold mb-4">👤 Client & Project Details</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div><label class="block text-sm font-semibold mb-2">Client Name *</label><input id="clientName" type="text" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="Full name"></div>
+<div><label class="block text-sm font-semibold mb-2">Phone Number *</label><input id="clientPhone" type="tel" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="08XXXXXXXXX"></div>
+<div><label class="block text-sm font-semibold mb-2">Email</label><input id="clientEmail" type="email" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="email@example.com"></div>
+<div><label class="block text-sm font-semibold mb-2">Project Name *</label><input id="projectName" type="text" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="Project name"></div>
+<div><label class="block text-sm font-semibold mb-2">Location *</label><input id="projectLocation" type="text" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="Location, State"></div>
+<div><label class="block text-sm font-semibold mb-2">File Number</label><input id="fileNumber" type="text" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none" placeholder="LD/1234/2026"></div>
+<div><label class="block text-sm font-semibold mb-2">Survey Type</label>
+<select id="surveyType" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none">
+<option>Boundary Survey</option><option>Topographic Survey</option><option>Cadastral Survey</option><option>Engineering Survey</option><option>Construction Survey</option><option>Hydrographic Survey</option><option>Aerial/Drone Survey</option>
+</select>
+</div>
+<div><label class="block text-sm font-semibold mb-2">Coordinate System</label>
+<select id="coordSystem" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-purple-500 outline-none">
+<option>WGS84 / UTM Zone 31N</option><option>WGS84 / UTM Zone 32N</option><option>WGS84 / UTM Zone 33N</option><option>Minna / UTM 31N (NNO)</option>
+</select>
+</div>
+</div>
+</div>
+
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+<h2 class="text-xl font-bold mb-4">📍 Point Collection</h2>
+<div class="grid grid-cols-4 gap-3 mb-4">
+<button onclick="addGPSPoint()" class="gradient-green text-white px-4 py-2 rounded-lg font-bold text-sm">➕ GPS Point</button>
+<button onclick="toggleManual()" class="gradient-bg text-white px-4 py-2 rounded-lg font-bold text-sm">✏️ Manual</button>
+<button onclick="undoPoint()" class="gradient-orange text-white px-4 py-2 rounded-lg font-bold text-sm">↩️ Undo</button>
+<button onclick="clearPoints()" class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-sm">🗑️ Clear</button>
+</div>
+
+<div id="manualPanel" class="hidden mb-4 p-4 bg-purple-50 rounded-lg border-2 border-purple-300">
+<div class="grid grid-cols-3 gap-3 mb-3">
+<div><label class="block text-xs font-semibold mb-1">Northing (m)</label><input id="manualN" type="number" step="0.001" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-mono" placeholder="857881.968"></div>
+<div><label class="block text-xs font-semibold mb-1">Easting (m)</label><input id="manualE" type="number" step="0.001" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-mono" placeholder="707032.831"></div>
+<div><label class="block text-xs font-semibold mb-1">Elevation (m)</label><input id="manualElev" type="number" step="0.001" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm font-mono" placeholder="0.000"></div>
+</div>
+<button onclick="addManualPoint()" class="gradient-bg text-white px-6 py-2 rounded-lg font-bold w-full">✅ Add Point</button>
+</div>
+
+<div class="grid grid-cols-5 gap-3 mb-4">
+<div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 text-center"><div class="text-2xl font-black text-purple-600" id="statPoints">0</div><div class="text-xs text-gray-600">Points</div></div>
+<div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 text-center"><div class="text-2xl font-black text-purple-600" id="statHectares">0.0000</div><div class="text-xs text-gray-600">Hectares</div></div>
+<div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 text-center"><div class="text-2xl font-black text-purple-600" id="statAcres">0.0000</div><div class="text-xs text-gray-600">Acres</div></div>
+<div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 text-center"><div class="text-2xl font-black text-purple-600" id="statPerimeter">0</div><div class="text-xs text-gray-600">Perim (m)</div></div>
+<div class="bg-gray-50 p-3 rounded-lg border-2 border-gray-200 text-center"><div class="text-2xl font-black text-purple-600" id="statPlots">0.0</div><div class="text-xs text-gray-600">Plots</div></div>
+</div>
+
+<div id="pointsTable" class="mb-4 overflow-x-auto"></div>
+
+<div class="grid grid-cols-3 gap-4">
+<button onclick="completeSurvey()" class="gradient-bg text-white px-6 py-3 rounded-lg font-bold">✅ Complete</button>
+<button onclick="emailReport()" class="bg-blue-500 text-white px-6 py-3 rounded-lg font-bold">📧 Email</button>
+<button onclick="whatsappReport()" class="gradient-green text-white px-6 py-3 rounded-lg font-bold">📱 WhatsApp</button>
+</div>
+</div>
+</div>
+
+<!-- EQUIPMENT TAB -->
+<div id="content-equipment" class="tab-content hidden">
+<div class="text-center mb-6">
+<h2 class="text-3xl font-black mb-2">🎯 Professional Equipment Rental</h2>
+<p class="text-gray-600">Rent premium survey instruments · Instant booking · Transparent 45/55 revenue split</p>
+</div>
+
+<div class="payment-split">
+<h3 class="text-lg font-bold mb-4 text-center opacity-90">💰 Revenue Sharing Model — Scale 1:10</h3>
+<div class="split-item">
+<div><div class="font-bold">Platform Commission (Arnold — You)</div><div class="text-sm opacity-75 mt-1">Opay: 8117554948 · Credited instantly on booking</div></div>
+<div class="split-pct">4.5/10</div>
+</div>
+<div class="split-item">
+<div><div class="font-bold">Equipment Partner (Licensed Provider)</div><div class="text-sm opacity-75 mt-1">55% routed to authorized equipment company</div></div>
+<div class="split-pct">5.5/10</div>
+</div>
+<div class="text-center text-xs opacity-70 mt-3 pt-3 border-t border-white/20">💳 Customer pays full price → 45% to Opay 8117554948 → 55% to licensed partner</div>
+</div>
+
+<div id="equipmentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+<div class="bg-gradient-to-br from-purple-900 to-purple-700 text-white rounded-xl p-6 mt-8">
+<p class="font-bold text-sm mb-4 opacity-80">💳 YOUR PAYMENT ACCOUNT — ARNOLD</p>
+<div class="space-y-3">
+<div class="flex justify-between py-2 border-b border-white/20"><span class="text-sm opacity-75">Opay Wallet</span><span class="font-bold font-mono">8117554948</span></div>
+<div class="flex justify-between py-2 border-b border-white/20"><span class="text-sm opacity-75">Email</span><span class="font-bold">opusarnold@gmail.com</span></div>
+<div class="flex justify-between py-2"><span class="text-sm opacity-75">WhatsApp</span><span class="font-bold">+234-811-755-4948</span></div>
+</div>
+</div>
+</div>
+
+<!-- TRAINING TAB -->
+<div id="content-training" class="tab-content hidden">
+<div class="text-center mb-6">
+<h2 class="text-3xl font-black mb-2">🎓 Professional Training Hub</h2>
+<p class="text-gray-600">Earn 45% commission · Paystack payments · Instant access to learn-anything.xyz</p>
+</div>
+
+<div class="payment-split">
+<h3 class="text-lg font-bold mb-4 text-center opacity-90">💡 Training Revenue Share</h3>
+<div class="split-item"><div><div class="font-bold">Platform Owner (Arnold) — Opay 8117554948</div></div><div class="split-pct">4.5/10</div></div>
+<div class="split-item"><div><div class="font-bold">Course / Education Provider</div></div><div class="split-pct">5.5/10</div></div>
+</div>
+
+<div id="trainingGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+</div>
+
+<!-- OTHER TABS (Placeholders) -->
+<div id="content-coords" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">🌍 Coordinate Tools</h2><p>Advanced coordinate conversion tools...</p></div></div>
+<div id="content-plot" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">📐 Plot Layout</h2><p>Interactive plot layout...</p></div></div>
+<div id="content-gis" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">🗺️ GIS Services</h2><p>GIS & Remote Sensing services...</p></div></div>
+<div id="content-verify" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">🔒 C of O Verification</h2><p>Certificate verification...</p></div></div>
+<div id="content-services" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">💼 Professional Services</h2><p>Survey services...</p></div></div>
+<div id="content-history" class="tab-content hidden"><div class="bg-white rounded-xl shadow-lg p-6"><h2 class="text-xl font-bold mb-4">📁 Survey History</h2><div id="historyOut" class="text-center py-16 text-gray-400"><div class="text-5xl mb-4">📂</div><p class="font-bold">No surveys yet</p></div></div></div>
+
+</main>
+
+<!-- Modal -->
+<div id="modalOverlay" class="modal-overlay">
+<div class="modal-box" id="modalContent"></div>
+</div>
+
+<footer class="bg-gradient-to-br from-purple-900 via-purple-800 to-purple-900 text-white py-8 text-center mt-12">
+<div class="max-w-6xl mx-auto px-4">
+<p class="text-xl font-black mb-2">🎯 SurveyPro Elite</p>
+<p class="text-sm opacity-75 mb-3">Nigeria's #1 Professional Surveying & Equipment Rental Platform</p>
+<p class="text-sm opacity-90">📞 +234-811-755-4948 · 📧 opusarnold@gmail.com · 💳 Opay: 8117554948</p>
+<p class="text-xs opacity-50 mt-4">© 2026 SurveyPro Elite · Commercial Licensed · 45/55 Revenue Split · v7.0 Final</p>
+</div>
+</footer>
+
+<script>
+const CONFIG={paystackKey:'pk_test_eccaa497055c149e45a6f21500a322cb584ec9eb',phone:'2348117554948',opay:'8117554948',email:'opusarnold@gmail.com',name:'Arnold',wa:'https://wa.me/2348117554948'};
+
+const EQUIPMENT=[
+{name:'Total Station',model:'Leica TS06/TS16',price:20000,icon:'🎯',desc:'High-precision 2" electronic theodolite with integrated EDM, Bluetooth, and onboard memory.',feats:['2" angular accuracy','3km EDM prism-less','Bluetooth data transfer','Tripod + prism included'],url:'https://www.nationalequipment.com/total-stations'},
+{name:'RTK GNSS Receiver',model:'Trimble R10/R12i',price:20000,icon:'📡',desc:'Multi-constellation GNSS with real-time kinematic positioning and integrated UHF modem.',feats:['8mm RTK accuracy','GPS+GLONASS+BeiDou+Galileo','UHF + NTRIP corrections','Pole + controller included'],url:'https://www.sunbeltrentals.com/surveying'},
+{name:'Survey Drone',model:'DJI Phantom 4 RTK',price:25000,icon:'🚁',desc:'Professional aerial mapping drone with RTK, 20MP sensor, and Pix4D photogrammetry suite.',feats:['Centimetre RTK accuracy','20MP Hasselblad sensor','Pix4D software included','45-min flight time'],url:'https://www.dronebase.com/equipment'},
+{name:'Digital Level',model:'Leica DNA03',price:8000,icon:'📏',desc:'High-precision digital auto-level with automatic barcode reading and 2000-point memory.',feats:['0.3mm/km accuracy','Auto barcode reading','2000-point memory','Invar staff included'],url:'https://www.unitedrentals.com/survey'},
+{name:'3D Laser Scanner',model:'Leica RTC360',price:30000,icon:'⚡',desc:'Ultra-fast reality capture scanner for BIM, heritage, and infrastructure with HDR imaging.',feats:['2M points/second','360° full-dome capture','HDR panoramic imaging','Auto registration software'],url:'https://www.laserscanning.com/rentals'},
+{name:'Electronic Theodolite',model:'Topcon DT-209',price:6000,icon:'🔭',desc:'Professional 9" electronic theodolite with dual-axis compensation and IP54 weatherproofing.',feats:['9" angular accuracy','Dual-axis compensation','Digital LCD display','IP54 weatherproof'],url:'https://www.tigersupplies.com/theodolites'}
+];
+
+const COURSES=[
+{id:'gis',name:'Advanced GIS & QGIS Mapping',price:25000,dur:'12 hours',level:'Beginner',desc:'Master QGIS and ArcGIS for professional surveying.',url:'https://learn-anything.xyz/course/gis-mapping'},
+{id:'drone',name:'Drone Surveying & Photogrammetry',price:45000,dur:'16 hours',level:'Intermediate',desc:'Aerial mapping, photogrammetry, and 3D point cloud analysis.',url:'https://learn-anything.xyz/course/drone-surveying'},
+{id:'ai',name:'AI & Machine Learning in Surveying',price:35000,dur:'10 hours',level:'Advanced',desc:'Automated feature extraction and AI-powered geospatial analytics.',url:'https://learn-anything.xyz/course/ai-surveying'},
+{id:'rtk',name:'RTK/GNSS Fundamentals',price:20000,dur:'8 hours',level:'Beginner',desc:'High-precision GPS techniques and cadastral survey applications.',url:'https://learn-anything.xyz/course/rtk-gnss'},
+{id:'civ3d',name:'AutoCAD Civil 3D for Surveyors',price:30000,dur:'14 hours',level:'Intermediate',desc:'Professional drawing, surface modelling, and survey deliverables.',url:'https://learn-anything.xyz/course/civil3d'},
+{id:'total',name:'Total Station Field Operations',price:18000,dur:'6 hours',level:'Beginner',desc:'Field setup, traversing, stakeout, and data management workflows.',url:'https://learn-anything.xyz/course/total-station'}
+];
+
+let gpsPos=null,watchId=null,surveyPoints=[],surveys=[],dark=false;
+
+window.addEventListener('DOMContentLoaded',()=>{loadSurveys();buildEquipmentGrid();buildTrainingGrid();refreshHistory();});
+
+function showTab(tab){document.querySelectorAll('.tab-content').forEach(el=>el.classList.add('hidden'));document.querySelectorAll('[id^="tab-"]').forEach(el=>el.classList.remove('tab-active'));const content=document.getElementById('content-'+tab);if(content){content.classList.remove('hidden');content.classList.add('fade-in');}const tabBtn=document.getElementById('tab-'+tab);if(tabBtn)tabBtn.classList.add('tab-active');}
+
+function enableGPS(){if(!navigator.geolocation){showToast('GPS not supported on this device','error');return;}document.getElementById('gpsInfo').innerHTML='<p class="pulse text-purple-600 font-bold">🔄 Acquiring GPS signal...</p>';watchId=navigator.geolocation.watchPosition(pos=>{gpsPos=pos.coords;const acc=pos.coords.accuracy;const color=acc<5?'#10b981':acc<15?'#f59e0b':'#ef4444';const label=acc<5?'High':acc<15?'Medium':'Low';document.getElementById('gpsInfo').innerHTML=`<div class="grid grid-cols-2 gap-4 text-sm"><div><strong>Latitude:</strong> ${pos.coords.latitude.toFixed(7)}°N</div><div><strong>Longitude:</strong> ${pos.coords.longitude.toFixed(7)}°E</div><div><strong>Accuracy:</strong> <span style="color:${color}">±${acc.toFixed(1)}m (${label})</span></div><div><strong>Altitude:</strong> ${(pos.coords.altitude||0).toFixed(1)}m</div></div>`;document.getElementById('gpsDot').style.background='#10b981';document.getElementById('gpsLabel').textContent='GPS ON';},err=>{showToast('GPS error: '+err.message,'error');},{enableHighAccuracy:true,maximumAge:1000});}
+
+function stopGPS(){if(watchId)navigator.geolocation.clearWatch(watchId);watchId=null;gpsPos=null;document.getElementById('gpsDot').style.background='#ef4444';document.getElementById('gpsLabel').textContent='GPS OFF';showToast('GPS stopped');}
+
+function addGPSPoint(){if(!gpsPos){showToast('Enable GPS first','warning');return;}const utm=latToUTM(gpsPos.latitude,gpsPos.longitude);surveyPoints.push({id:surveyPoints.length+1,lat:gpsPos.latitude,lon:gpsPos.longitude,n:utm.n,e:utm.e,elev:gpsPos.altitude||0,acc:gpsPos.accuracy,src:'GPS'});updateStats();showToast(`Point ${surveyPoints.length} added (±${gpsPos.accuracy.toFixed(1)}m)`,'success');}
+
+function toggleManual(){document.getElementById('manualPanel').classList.toggle('hidden');}
+
+function addManualPoint(){const n=parseFloat(document.getElementById('manualN').value);const e=parseFloat(document.getElementById('manualE').value);const elev=parseFloat(document.getElementById('manualElev').value)||0;if(isNaN(n)||isNaN(e)){showToast('Enter valid Northing & Easting','warning');return;}surveyPoints.push({id:surveyPoints.length+1,n,e,elev,lat:0,lon:0,src:'Manual'});document.getElementById('manualN').value='';document.getElementById('manualE').value='';document.getElementById('manualElev').value='';document.getElementById('manualPanel').classList.add('hidden');updateStats();showToast(`Point ${surveyPoints.length} added`,'success');}
+
+function undoPoint(){if(!surveyPoints.length){showToast('No points to undo','warning');return;}surveyPoints.pop();updateStats();showToast('Last point removed');}
+
+function clearPoints(){if(!confirm('Clear all points?'))return;surveyPoints=[];updateStats();showToast('All points cleared');}
+
+function updateStats(){const n=surveyPoints.length;document.getElementById('statPoints').textContent=n;let ha=0,ac=0,pm=0;if(n>=3){const area=shoelaceArea(surveyPoints);ha=area/10000;ac=ha*2.47105;pm=calculatePerimeter(surveyPoints);}document.getElementById('statHectares').textContent=ha.toFixed(4);document.getElementById('statAcres').textContent=ac.toFixed(4);document.getElementById('statPerimeter').textContent=pm.toFixed(0);document.getElementById('statPlots').textContent=((ha*10000)/1500).toFixed(1);if(!n){document.getElementById('pointsTable').innerHTML='';return;}let html='<table class="w-full text-sm border-collapse"><thead><tr class="bg-gray-100"><th class="border p-2">Pt</th><th class="border p-2">Northing</th><th class="border p-2">Easting</th><th class="border p-2">Elev</th><th class="border p-2">Source</th><th class="border p-2">Acc</th></tr></thead><tbody>';surveyPoints.forEach(p=>{html+=`<tr class="hover:bg-gray-50"><td class="border p-2 text-center font-bold">${p.id}</td><td class="border p-2 font-mono">${p.n.toFixed(3)}</td><td class="border p-2 font-mono">${p.e.toFixed(3)}</td><td class="border p-2 font-mono">${p.elev.toFixed(3)}</td><td class="border p-2">${p.src}</td><td class="border p-2 font-mono">${p.acc?'±'+p.acc.toFixed(1)+'m':'—'}</td></tr>`;});html+='</tbody></table>';document.getElementById('pointsTable').innerHTML=html;}
+
+function completeSurvey(){const cName=document.getElementById('clientName').value.trim();const cPhone=document.getElementById('clientPhone').value.trim();const pName=document.getElementById('projectName').value.trim();const pLoc=document.getElementById('projectLocation').value.trim();if(!cName||!cPhone||!pName||!pLoc){showToast('Fill all required fields (*)','warning');return;}if(surveyPoints.length<3){showToast('Need at least 3 points','warning');return;}const area=shoelaceArea(surveyPoints);const ha=area/10000;const ac=ha*2.47105;const pm=calculatePerimeter(surveyPoints);const code='NGS-'+randomCode(8);const survey={id:Date.now(),clientName:cName,clientPhone:cPhone,clientEmail:document.getElementById('clientEmail').value.trim(),projectName:pName,location:pLoc,fileNo:document.getElementById('fileNumber').value.trim(),surveyType:document.getElementById('surveyType').value,coordSys:document.getElementById('coordSystem').value,hectares:ha,acres:ac,perimeter:pm,plots:(ha*10000/1500),points:surveyPoints.length,pointData:[...surveyPoints],verificationCode:code,savedAt:new Date().toISOString()};surveys.push(survey);saveSurveys();refreshHistory();showModal(`<div class="text-center"><div class="text-6xl mb-4">✅</div><h3 class="text-2xl font-black text-green-600 mb-4">Survey Complete!</h3><div class="bg-green-50 border-2 border-green-300 rounded-lg p-6 mb-6"><div class="text-xs text-gray-600 mb-1">Verification Code</div><div class="text-3xl font-black text-green-600 font-mono tracking-wider">${code}</div></div><div class="grid grid-cols-2 gap-4 mb-6"><div class="bg-blue-50 rounded-lg p-4"><div class="text-xs text-gray-600">Hectares</div><div class="text-2xl font-black text-blue-600">${ha.toFixed(4)}</div></div><div class="bg-green-50 rounded-lg p-4"><div class="text-xs text-gray-600">Acres</div><div class="text-2xl font-black text-green-600">${ac.toFixed(4)}</div></div><div class="bg-purple-50 rounded-lg p-4"><div class="text-xs text-gray-600">Perimeter</div><div class="text-xl font-black text-purple-600">${pm.toFixed(2)} m</div></div><div class="bg-orange-50 rounded-lg p-4"><div class="text-xs text-gray-600">Plots</div><div class="text-xl font-black text-orange-600">${(ha*10000/1500).toFixed(2)}</div></div></div><div class="bg-gray-50 rounded-lg p-4 text-left text-sm mb-6"><div><strong>Client:</strong> ${cName} · ${cPhone}</div><div class="mt-2"><strong>Project:</strong> ${pName} — ${pLoc}</div></div><div class="grid grid-cols-2 gap-3"><button onclick="closeModal();showTab('history')" class="gradient-bg text-white px-6 py-3 rounded-lg font-bold">📁 View History</button><button onclick="closeModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg font-bold">Close</button></div></div>`);surveyPoints=[];updateStats();}
+
+function emailReport(){const email=document.getElementById('clientEmail').value.trim();if(!email){showToast('Enter client email','warning');return;}const body=`Survey Report\nProject: ${document.getElementById('projectName').value}\nSurveyor: ${CONFIG.name}\nEmail: ${CONFIG.email}\nPhone: +234-811-755-4948\nPoints: ${surveyPoints.length}`;window.location.href=`mailto:${email}?subject=Survey Report - ${document.getElementById('projectName').value}&body=${encodeURIComponent(body)}`;}
+
+function whatsappReport(){const msg=`📊 Survey Report\nProject: ${document.getElementById('projectName').value||'N/A'}\nClient: ${document.getElementById('clientName').value||'N/A'}\nPoints: ${surveyPoints.length}\nSurveyor: ${CONFIG.name} · ${CONFIG.email}`;window.open(`${CONFIG.wa}?text=${encodeURIComponent(msg)}`,'_blank');}
+
+function buildEquipmentGrid(){const grid=document.getElementById('equipmentGrid');grid.innerHTML=EQUIPMENT.map(eq=>{const yourEarn=Math.round(eq.price*0.45);const partnerEarn=eq.price-yourEarn;return`<div class="bg-white equipment-card card-hover"><div class="flex items-center gap-3 mb-3"><span class="text-4xl">${eq.icon}</span><div><h4 class="text-lg font-black text-purple-600">${eq.name}</h4><p class="text-xs text-gray-600">${eq.model}</p></div></div><p class="text-sm text-gray-700 mb-3">${eq.desc}</p><div class="price-big">₦${eq.price.toLocaleString()}<span class="text-base font-normal text-gray-600">/day</span></div><div class="earn-badge">✅ You earn: ₦${yourEarn.toLocaleString()} (45%)</div><ul class="space-y-1 mb-4 text-sm">${eq.feats.map(f=>`<li>✅ ${f}</li>`).join('')}</ul><button onclick='bookEquipment(${JSON.stringify(eq).replace(/'/g,"&apos;")})' class="gradient-green text-white px-6 py-3 rounded-lg font-bold w-full hover:opacity-90">🛒 Book Now · Earn ₦${yourEarn.toLocaleString()}</button></div>`;}).join('');}
+
+function bookEquipment(eq){const yourEarn=Math.round(eq.price*0.45);const partnerEarn=eq.price-yourEarn;showModal(`<div><h3 class="text-2xl font-black text-center mb-4">🎯 ${eq.name}</h3><p class="text-center text-gray-600 text-sm mb-6">${eq.model}</p><div class="payment-split mb-6"><div class="split-item"><div><div class="font-bold">Your Commission (Arnold)</div><div class="text-xs opacity-75">Opay: 8117554948</div></div><div><div class="split-pct text-xl">4.5</div><div class="text-center text-sm font-bold">₦${yourEarn.toLocaleString()}</div></div></div><div class="split-item"><div><div class="font-bold">Equipment Partner</div></div><div><div class="split-pct text-xl">5.5</div><div class="text-center text-sm font-bold">₦${partnerEarn.toLocaleString()}</div></div></div></div><div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-6"><div class="flex justify-between py-2 border-b border-green-200 text-sm"><span>Total Price</span><span>₦${eq.price.toLocaleString()}/day</span></div><div class="flex justify-between py-2 border-b border-green-200 text-sm text-green-700"><span>✅ Your Earn (45%)</span><span class="font-bold">₦${yourEarn.toLocaleString()}</span></div><div class="flex justify-between py-2 text-sm text-purple-700"><span>🏢 Partner (55%)</span><span class="font-bold">₦${partnerEarn.toLocaleString()}</span></div></div><div class="grid grid-cols-2 gap-3 mb-4"><div><label class="block text-xs font-semibold mb-1">Full Name *</label><input id="bkName" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm" placeholder="Customer name"></div><div><label class="block text-xs font-semibold mb-1">Phone *</label><input id="bkPhone" type="tel" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm" placeholder="08XXXXXXXXX"></div><div><label class="block text-xs font-semibold mb-1">Rental Date *</label><input id="bkDate" type="date" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm"></div><div><label class="block text-xs font-semibold mb-1">Days *</label><input id="bkDays" type="number" min="1" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg text-sm" placeholder="1"></div></div><div class="grid grid-cols-2 gap-3"><button onclick='processEquipmentPayment(${JSON.stringify(eq).replace(/'/g,"&apos;")})' class="gradient-green text-white px-6 py-3 rounded-lg font-bold">💳 Pay & Book</button><button onclick="closeModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg font-bold">Cancel</button></div></div>`);}
+
+function processEquipmentPayment(eq){const name=document.getElementById('bkName').value.trim();const phone=document.getElementById('bkPhone').value.trim();const date=document.getElementById('bkDate').value;const days=parseInt(document.getElementById('bkDays').value);if(!name||!phone||!date||!days){showToast('Fill all fields','warning');return;}const total=eq.price*days;const yourTotal=Math.round(eq.price*0.45)*days;try{const handler=PaystackPop.setup({key:CONFIG.paystackKey,email:CONFIG.email,amount:total*100,currency:'NGN',ref:'SPE-'+Date.now(),metadata:{equipment:eq.name,customer:name,phone:phone,date:date,days:days,yourShare:yourTotal},callback:function(response){const msg=`🎯 EQUIPMENT BOOKING CONFIRMED\n\nEquipment: ${eq.name}\nCustomer: ${name} · ${phone}\nDate: ${date} · ${days} day(s)\nTotal: ₦${total.toLocaleString()}\n\n💰 YOUR 45%: ₦${yourTotal.toLocaleString()} → Opay ${CONFIG.opay}\n\nRef: ${response.reference}\n\n📞 ${CONFIG.name} · ${CONFIG.email}`;closeModal();showBanner(`✅ Booking confirmed! ₦${yourTotal.toLocaleString()} credited to Opay ${CONFIG.opay}. Ref: ${response.reference}`,'success');setTimeout(()=>{window.open(`${CONFIG.wa}?text=${encodeURIComponent(msg)}`,'_blank');window.open(eq.url,'_blank');},2000);},onClose:()=>showToast('Payment cancelled')});handler.openIframe();}catch(e){showToast('Paystack unavailable - using WhatsApp','warning');const msg=`🎯 EQUIPMENT BOOKING\n\nEquipment: ${eq.name}\nCustomer: ${name} · ${phone}\nDate: ${date} · ${days} day(s)\nTotal: ₦${total.toLocaleString()}\n\n💰 DEPOSIT (45%): ₦${yourTotal.toLocaleString()}\nPay to Opay: ${CONFIG.opay}`;closeModal();window.open(`${CONFIG.wa}?text=${encodeURIComponent(msg)}`,'_blank');}}
+
+function buildTrainingGrid(){const grid=document.getElementById('trainingGrid');const levelColors={Beginner:'bg-blue-100 text-blue-800',Intermediate:'bg-yellow-100 text-yellow-800',Advanced:'bg-pink-100 text-pink-800'};grid.innerHTML=COURSES.map(c=>{const yourEarn=Math.round(c.price*0.45);return`<div class="bg-white rounded-xl shadow-lg p-6 border-2 border-gray-200 hover:border-purple-500 transition card-hover"><div class="flex justify-between items-start mb-3"><h4 class="text-base font-black text-purple-600 flex-1">${c.name}</h4><span class="text-xs font-bold px-2 py-1 rounded-lg ${levelColors[c.level]||levelColors.Beginner}">${c.level}</span></div><p class="text-sm text-gray-700 mb-3">${c.desc}</p><div class="flex gap-3 text-xs text-gray-500 mb-4"><span>⏱ ${c.dur}</span><span>🏛 learn-anything.xyz</span></div><div class="text-3xl font-black text-green-600 mb-2">₦${c.price.toLocaleString()}</div><div class="earn-badge mb-4">You earn ₦${yourEarn.toLocaleString()} (45%)</div><button onclick='enrollCourse(${JSON.stringify(c).replace(/'/g,"&apos;")})' class="gradient-bg text-white px-6 py-3 rounded-lg font-bold w-full hover:opacity-90">🎓 Enrol · Earn ₦${yourEarn.toLocaleString()}</button></div>`;}).join('');}
+
+function enrollCourse(course){const yourEarn=Math.round(course.price*0.45);const email=prompt(`🎓 Enrol in ${course.name}\n\nEnter your email for course access:`);if(!email||!email.includes('@')){showToast('Enter valid email','warning');return;}try{const handler=PaystackPop.setup({key:CONFIG.paystackKey,email:email,amount:course.price*100,currency:'NGN',ref:'COURSE-'+Date.now(),metadata:{course:course.name,student:email},callback:function(response){const msg=`🎓 COURSE ENROLMENT CONFIRMED\n\nCourse: ${course.name}\nStudent: ${email}\n\n💰 YOUR 45%: ₦${yourEarn.toLocaleString()} → Opay ${CONFIG.opay}\n\nRef: ${response.reference}\n\n📚 Access your course:\n${course.url}\n\n📞 ${CONFIG.name} · ${CONFIG.email}`;showBanner(`✅ Enrolled! ₦${yourEarn.toLocaleString()} → Opay ${CONFIG.opay}. Opening course...`,'success');setTimeout(()=>{window.open(`${CONFIG.wa}?text=${encodeURIComponent(msg)}`,'_blank');window.open(course.url,'_blank');},2000);},onClose:()=>showToast('Payment cancelled')});handler.openIframe();}catch(e){const msg=`🎓 COURSE PAYMENT\n\nCourse: ${course.name}\nEmail: ${email}\n\nPay ₦${course.price.toLocaleString()} to:\nOpay: ${CONFIG.opay}\n\nAccess: ${course.url}\n\nYour 45%: ₦${yourEarn.toLocaleString()}`;window.open(`${CONFIG.wa}?text=${encodeURIComponent(msg)}`,'_blank');window.open(course.url,'_blank');}}
+
+function latToUTM(lat,lon){const zone=Math.floor((lon+180)/6)+1;const k=0.9996,a=6378137,e=0.081819191;const latRad=lat*Math.PI/180,lonRad=(lon-(zone-1)*6-180+3)*Math.PI/180;const N=a/Math.sqrt(1-e*e*Math.sin(latRad)**2);const T=Math.tan(latRad)**2,C=(e*e/(1-e*e))*Math.cos(latRad)**2,A=lonRad*Math.cos(latRad);const M=a*((1-e*e/4-3*e**4/64)*latRad-(3*e*e/8+3*e**4/32)*Math.sin(2*latRad)+(15*e**4/256)*Math.sin(4*latRad));const easting=k*N*(A+(1-T+C)*A**3/6)+500000;const northing=k*(M+N*Math.tan(latRad)*(A*A/2+(5-T+9*C+4*C*C)*A**4/24));return{zone,e:easting,n:northing};}
+
+function shoelaceArea(pts){let area=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;area+=pts[i].e*pts[j].n-pts[j].e*pts[i].n;}return Math.abs(area/2);}
+
+function calculatePerimeter(pts){let perim=0;for(let i=0;i<pts.length;i++){const j=(i+1)%pts.length;perim+=Math.sqrt((pts[j].n-pts[i].n)**2+(pts[j].e-pts[i].e)**2);}return perim;}
+
+function randomCode(len){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let i=0;i<len;i++)code+=chars[Math.floor(Math.random()*chars.length)];return code;}
+
+function saveSurveys(){localStorage.setItem('surveypro_surveys',JSON.stringify(surveys));}
+function loadSurveys(){const data=localStorage.getItem('surveypro_surveys');if(data)surveys=JSON.parse(data);}
+function refreshHistory(){const out=document.getElementById('historyOut');if(!surveys.length){out.innerHTML='<div class="text-center py-16 text-gray-400"><div class="text-5xl mb-4">📂</div><p class="font-bold text-lg">No surveys yet</p><p class="text-sm mt-2">Complete a survey to see it here</p></div>';return;}out.innerHTML=surveys.slice().reverse().map((s,i)=>{const idx=surveys.length-1-i;return`<div class="bg-white border-2 border-gray-200 rounded-xl p-5 mb-4 hover:border-purple-500 transition"><div class="flex justify-between items-start mb-3"><div><h3 class="font-black text-purple-600">${s.projectName}</h3><p class="text-sm text-gray-600">${s.location} · ${s.surveyType}</p></div><span class="bg-gradient-to-r from-purple-600 to-green-600 text-white px-3 py-1 rounded-full text-xs font-bold font-mono">${s.verificationCode}</span></div><div class="grid grid-cols-4 gap-2 mb-3 text-center text-sm"><div class="bg-blue-50 rounded p-2"><div class="text-xs text-gray-600">Ha</div><div class="font-black text-blue-600">${s.hectares.toFixed(4)}</div></div><div class="bg-green-50 rounded p-2"><div class="text-xs text-gray-600">Acres</div><div class="font-black text-green-600">${s.acres.toFixed(4)}</div></div><div class="bg-purple-50 rounded p-2"><div class="text-xs text-gray-600">Points</div><div class="font-black text-purple-600">${s.points}</div></div><div class="bg-orange-50 rounded p-2"><div class="text-xs text-gray-600">Plots</div><div class="font-black text-orange-600">${s.plots.toFixed(1)}</div></div></div><div class="text-xs text-gray-500 mb-3">${s.clientName} · ${s.clientPhone} · ${new Date(s.savedAt).toLocaleDateString()}</div><div class="flex gap-2"><button onclick="shareSurvey(${idx})" class="flex-1 gradient-bg text-white px-4 py-2 rounded-lg font-bold text-xs">📱 Share</button><button onclick="deleteSurvey(${idx})" class="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-xs">🗑️</button></div></div>`;}).join('');}
+
+function shareSurvey(idx){const s=surveys[idx];const txt=`📊 Survey Report\nProject: ${s.projectName}\nLocation: ${s.location}\nClient: ${s.clientName}\nArea: ${s.hectares.toFixed(4)} ha (${s.acres.toFixed(4)} ac)\nCode: ${s.verificationCode}\nDate: ${new Date(s.savedAt).toLocaleDateString()}\n\n🎯 SurveyPro Elite · ${CONFIG.email}`;if(navigator.share)navigator.share({title:`Survey — ${s.projectName}`,text:txt});else{navigator.clipboard.writeText(txt);showToast('Copied!','success');}}
+
+function deleteSurvey(idx){if(!confirm('Delete this survey?'))return;surveys.splice(idx,1);saveSurveys();refreshHistory();showToast('Survey deleted');}
+
+function showToast(msg,type='info'){const colors={success:'bg-green-500',error:'bg-red-500',warning:'bg-orange-500',info:'bg-blue-500'};const banner=document.getElementById('successBanner');const content=document.getElementById('bannerContent');const message=document.getElementById('bannerMessage');content.className=`px-4 py-3 text-white font-semibold flex items-center justify-between ${colors[type]||colors.info}`;message.textContent=({'success':'✅ ','error':'❌ ','warning':'⚠️ ','info':'💡 '}[type]||'')+msg;banner.classList.remove('hidden');setTimeout(()=>banner.classList.add('hidden'),4000);}
+
+function showBanner(msg,type){showToast(msg,type);}
+function closeBanner(){document.getElementById('successBanner').classList.add('hidden');}
+function showModal(html){document.getElementById('modalContent').innerHTML=html;document.getElementById('modalOverlay').classList.add('show');}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
+function toggleDark(){document.body.style.filter=dark?'':'invert(0.9) hue-rotate(180deg)';dark=!dark;}
+function changeLang(l){showToast(`Language: ${l} — multilingual coming soon`);}
+document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target.id==='modalOverlay')closeModal();});
+</script>
+</body>
+</html>
